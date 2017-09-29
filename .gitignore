@@ -1,0 +1,7 @@
+build/
+target/
+felix-cache/
+/felix/bin/
+/felix/bundle/
+/felix/conf
+*.swp

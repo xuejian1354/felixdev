@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<project name="RingoJS" default="install" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+
+    <target name="init">
+        <property name="project" value="com.ymbl.smartgateway.jsocks"/>
+        <property name="version" value="1.0.0"/>
+
+        <property name="debug" value="on"/>
+        <property name="optimize" value="on"/>
+        <property name="deprecation" value="on"/>
+
+        <condition property="mvn" value="mvn.bat">
+            <os family="dos" />
+        </condition>
+        <condition property="mvn" value="mvn">
+            <not>
+                <isset property="mvn" />
+            </not>
+        </condition>
+    </target>
+
+    <target name="install" depends="init">
+        <exec executable="${mvn}" failonerror="true">
+            <arg line="-Dpackaging=felix install" />
+        </exec>
+        <exec executable="${mvn}" failonerror="true">
+            <arg line="-Dpackaging=jsocks install" />
+        </exec>
+        <copy todir="felix/bundle" file="${project}/target/${project}-${version}.jar" />
+    </target>
+
+</project>
