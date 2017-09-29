@@ -7,7 +7,7 @@ import java.io.*;
    SocksServerSocket allows to accept connections from one particular
    host through the SOCKS4 or SOCKS5 proxy.
 */
-public class SocksServerSocket extends ServerSocket{
+public class SocksServerSocket extends ServerSocket {
    //Data members
    protected Proxy proxy;
    protected String localHost;
@@ -23,10 +23,11 @@ public class SocksServerSocket extends ServerSocket{
     *@param host Host from which the connection should be recieved.
     *@param port Port number of the primary connection.
     */
-   public SocksServerSocket(String host,int port)
-	  throws SocksException,UnknownHostException,IOException{
-      this(Proxy.defaultProxy,host,port);
+   public SocksServerSocket(String host, int port)
+	  throws SocksException, UnknownHostException, IOException {
+      this(Proxy.defaultProxy, host, port);
    }
+
    /**
     *Creates ServerSocket capable of accepting one connection
     *through the firewall, uses given proxy.
@@ -34,20 +35,18 @@ public class SocksServerSocket extends ServerSocket{
     *@param host Host from which the connection should be recieved.
     *@param port Port number of the primary connection.
     */
-   public SocksServerSocket(Proxy p,String host,int port)
-	  throws SocksException,UnknownHostException,IOException{
-
-
+   public SocksServerSocket(Proxy p, String host, int port)
+	  throws SocksException, UnknownHostException, IOException {
       super(0);
       if(p == null) throw new SocksException(Proxy.SOCKS_NO_PROXY);
       //proxy=p;
       proxy = p.copy();
-      if(proxy.isDirect(host)){
+      if(proxy.isDirect(host)) {
          remoteAddr = InetAddress.getByName(host);
          proxy = null;
          doDirect();
-      }else{
-         processReply(proxy.bind(host,port));
+      } else {
+         processReply(proxy.bind(host, port));
       }
    }
 
@@ -57,9 +56,9 @@ public class SocksServerSocket extends ServerSocket{
     *@param ip Host from which the connection should be recieved.
     *@param port Port number of the primary connection.
     */
-   public SocksServerSocket(InetAddress ip, int port) throws SocksException,
-                                                             IOException{
-      this(Proxy.defaultProxy,ip,port);
+   public SocksServerSocket(InetAddress ip, int port)
+		   throws SocksException, IOException {
+      this(Proxy.defaultProxy, ip, port);
    }
 
    /**
@@ -69,17 +68,17 @@ public class SocksServerSocket extends ServerSocket{
     *@param ip   Host from which the connection should be recieved.
     *@param port Port number of the primary connection.
     */
-   public SocksServerSocket(Proxy p,InetAddress ip, int port)
-          throws SocksException,IOException{
+   public SocksServerSocket(Proxy p, InetAddress ip, int port)
+          throws SocksException, IOException {
       super(0);
 
       if(p == null) throw new SocksException(Proxy.SOCKS_NO_PROXY);
       this.proxy = p.copy();
 
-      if(proxy.isDirect(ip)){
+      if(proxy.isDirect(ip)) {
          remoteAddr = ip;
          doDirect();
-      }else{
+      } else {
          processReply(proxy.bind(ip,port));
       }
    }
@@ -88,31 +87,29 @@ public class SocksServerSocket extends ServerSocket{
    /**
     * Accepts the incoming connection.
     */
-   public Socket accept() throws IOException{
+   public Socket accept() throws IOException {
       Socket s;
 
-      if(!doing_direct){
+      if(!doing_direct) {
          if(proxy == null) return null;
 
          ProxyMessage msg = proxy.accept();
-         s = msg.ip == null? new SocksSocket(msg.host,msg.port,proxy)
-                                  : new SocksSocket(msg.ip,msg.port,proxy);
+         s = msg.ip == null ? new SocksSocket(msg.host, msg.port, proxy)
+                                  : new SocksSocket(msg.ip, msg.port, proxy);
          //Set timeout back to 0
          proxy.proxySocket.setSoTimeout(0);
-      }else{ //Direct Connection
-
+      } else { //Direct Connection
           //Mimic the proxy behaviour,
           //only accept connections from the speciefed host.
-          while(true){
+          while(true) {
             s = super.accept();
-            if(s.getInetAddress().equals(remoteAddr)){
+            if(s.getInetAddress().equals(remoteAddr)) {
                //got the connection from the right host
                //Close listenning socket.
                break;
-            }else
+            } else
                s.close(); //Drop all connections from other hosts
           }
-
       }
       proxy = null;
       //Return accepted socket
@@ -124,7 +121,7 @@ public class SocksServerSocket extends ServerSocket{
     * the direct connection is used, closes direct ServerSocket. If the 
     * client socket have been allready accepted, does nothing.
     */
-   public void close() throws IOException{
+   public void close() throws IOException {
       super.close();
       if(proxy != null) proxy.endSession();
       proxy = null;
@@ -138,7 +135,7 @@ public class SocksServerSocket extends ServerSocket{
      @return the hostname of the address proxy is using to listen
      for incoming connection.
     */
-   public String getHost(){
+   public String getHost() {
       return localHost;
    }
 
@@ -147,13 +144,13 @@ public class SocksServerSocket extends ServerSocket{
     * connections, or the local machine address if doing direct
     * connection.
     */
-   public InetAddress getInetAddress(){
-      if(localIP == null){
-	 try{
-	   localIP = InetAddress.getByName(localHost);
-	 }catch(UnknownHostException e){
-	   return null;
-	 }
+   public InetAddress getInetAddress() {
+      if(localIP == null) {
+	    try {
+	      localIP = InetAddress.getByName(localHost);
+	    }catch(UnknownHostException e){
+	      return null;
+	    }
       }
       return localIP;
    }
@@ -162,7 +159,7 @@ public class SocksServerSocket extends ServerSocket{
     *  Get port assigned by proxy to listen for incoming connections, or
        the port chosen by local system, if accepting directly.
     */
-   public int getLocalPort(){
+   public int getLocalPort() {
       return localPort;
    }
 
@@ -173,35 +170,34 @@ public class SocksServerSocket extends ServerSocket{
                    incoming connection before failing with exception.
                    Zero timeout implies infinity.
    */
-   public void setSoTimeout(int timeout) throws SocketException{
+   public void setSoTimeout(int timeout) throws SocketException {
       super.setSoTimeout(timeout);
       if(!doing_direct) proxy.proxySocket.setSoTimeout(timeout);
    }
 
 
-//Private Methods
-//////////////////
+   //Private Methods
+   //////////////////
 
-   private void processReply(ProxyMessage reply)throws SocksException{
+   private void processReply(ProxyMessage reply) throws SocksException {
       localPort = reply.port;
       /*
        * If the server have assigned same host as it was contacted on
        * it might return an address of all zeros
        */
-      if(reply.host.equals("0.0.0.0")){
+      if(reply.host.equals("0.0.0.0")) {
          localIP = proxy.proxyIP;
          localHost = localIP.getHostName();
-      }else{
+      } else {
          localHost = reply.host;
          localIP = reply.ip;
       }
    }
 
-   private void doDirect(){
+   private void doDirect() {
       doing_direct = true;
       localPort = super.getLocalPort();
       localIP = super.getInetAddress();
       localHost = localIP.getHostName();
    }
-
 }

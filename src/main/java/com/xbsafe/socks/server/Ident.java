@@ -17,7 +17,7 @@ import java.util.StringTokenizer;
    else handleIdentError(id.errorCode,id.errorMessage)
    </pre></tt>
 */
-public class Ident{
+public class Ident {
 
     /** Error Message can be null.*/
     public String errorMessage;
@@ -69,47 +69,45 @@ public class Ident{
      Constructor may block, for a while.
      @param s Socket whose ownership on remote end should be obtained.
     */
-    public Ident(Socket s ){
+    public Ident(Socket s ) {
       Socket sock = null;
       successful = false; //We are pessimistic
 
-      try{
-        sock = new Socket(s.getInetAddress(),113);
+      try {
+        sock = new Socket(s.getInetAddress(), 113);
         sock.setSoTimeout(connectionTimeout);
-        byte[] request = (""+s.getPort()+" , "+
-                             s.getLocalPort()+"\r\n").getBytes();
+        byte[] request = ("" + s.getPort() + " , " + s.getLocalPort() + "\r\n").getBytes();
 
         sock.getOutputStream().write(request);
-
-        BufferedReader in = new BufferedReader(
-                            new InputStreamReader(sock.getInputStream()));
-
+        BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
         parseResponse(in.readLine());
-
-      }catch(InterruptedIOException iioe){
+      } catch(InterruptedIOException iioe) {
         errorCode = ERR_TIMEOUT;
         errorMessage = "Connection to identd timed out.";
-      }catch(ConnectException ce){
+      } catch(ConnectException ce) {
         errorCode = ERR_NO_CONNECT;
         errorMessage = "Connection to identd server failed.";
-
-      }catch(IOException ioe){
+      } catch(IOException ioe) {
         errorCode = ERR_NO_CONNECT;
         errorMessage = ""+ioe;
-      }finally{
-        try{ if(sock!=null) sock.close();}catch(IOException ioe){};
+      } finally {
+        try {
+        	if(sock!=null) sock.close();
+        } catch(IOException ioe){
+        	
+        };
       }
     }
 
-    private void parseResponse(String response){
-      if(response == null){
+    private void parseResponse(String response) {
+      if(response == null) {
          errorCode = ERR_PROTOCOL_INCORRECT;
          errorMessage = "Identd server closed connection.";
          return;
       }
 
-      StringTokenizer st = new StringTokenizer(response,":");
-      if(st.countTokens() < 3){
+      StringTokenizer st = new StringTokenizer(response, ":");
+      if(st.countTokens() < 3) {
          errorCode = ERR_PROTOCOL_INCORRECT;
          errorMessage = "Can't parse server response.";
          return;
@@ -118,20 +116,18 @@ public class Ident{
       st.nextToken(); //Discard first token, it's basically what we have send
       String command = st.nextToken().trim().toUpperCase();
 
-      if(command.equals("USERID") && st.countTokens() >= 2){
+      if(command.equals("USERID") && st.countTokens() >= 2) {
         successful = true;
         hostType = st.nextToken().trim();
         userName = st.nextToken("").substring(1);//Get all that is left
-      }else if(command.equals("ERROR")){
+      } else if(command.equals("ERROR")) {
         errorCode = ERR_PROTOCOL;
         errorMessage = st.nextToken();
-      }else{
+      } else {
         errorCode = ERR_PROTOCOL_INCORRECT;
         System.out.println("Opa!");
         errorMessage = "Can't parse server response.";
       }
-
-
     }
 
 ///////////////////////////////////////////////
@@ -155,5 +151,4 @@ public class Ident{
        if(s!= null) s.close();
     }
 //*/
-
 }

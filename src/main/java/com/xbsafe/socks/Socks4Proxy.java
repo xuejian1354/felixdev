@@ -2,20 +2,18 @@ package com.xbsafe.socks;
 
 import java.net.*;
 import java.io.*;
-import java.util.Hashtable;
-import java.util.Enumeration;
 
 /**
   Proxy which describes SOCKS4 proxy.
 */
 
-public class Socks4Proxy extends Proxy implements Cloneable{
+public class Socks4Proxy extends Proxy implements Cloneable {
 
-//Data members
+   //Data members
    String user;
 
-//Public Constructors
-//====================
+   //Public Constructors
+   //====================
 
    /**
      Creates the SOCKS4 proxy
@@ -25,9 +23,9 @@ public class Socks4Proxy extends Proxy implements Cloneable{
      @param user User name to use for identification purposes.
      @throws UnknownHostException If proxyHost can't be resolved.
     */
-   public Socks4Proxy(Proxy p,String proxyHost,int proxyPort,String user)
-          throws UnknownHostException{ 
-      super(p,proxyHost,proxyPort);
+   public Socks4Proxy(Proxy p, String proxyHost, int proxyPort, String user)
+          throws UnknownHostException { 
+      super(p, proxyHost, proxyPort);
       this.user = new String(user);
       version = 4;
    }
@@ -39,9 +37,9 @@ public class Socks4Proxy extends Proxy implements Cloneable{
      @param user User name to use for identification purposes.
      @throws UnknownHostException If proxyHost can't be resolved.
     */
-   public Socks4Proxy(String proxyHost,int proxyPort,String user)
-          throws UnknownHostException{ 
-      this(null,proxyHost,proxyPort,user);
+   public Socks4Proxy(String proxyHost, int proxyPort, String user)
+          throws UnknownHostException { 
+      this(null, proxyHost, proxyPort, user);
    }
 
    /**
@@ -51,8 +49,8 @@ public class Socks4Proxy extends Proxy implements Cloneable{
      @param proxyPort Port of the proxy server
      @param user User name to use for identification purposes.
     */
-   public Socks4Proxy(Proxy p,InetAddress proxyIP,int proxyPort,String user){
-      super(p,proxyIP,proxyPort);
+   public Socks4Proxy(Proxy p, InetAddress proxyIP, int proxyPort, String user) {
+      super(p, proxyIP, proxyPort);
       this.user = new String(user);
       version = 4;
    }
@@ -63,41 +61,41 @@ public class Socks4Proxy extends Proxy implements Cloneable{
      @param proxyPort Port of the proxy server
      @param user User name to use for identification purposes.
     */
-   public Socks4Proxy(InetAddress proxyIP,int proxyPort,String user){
-      this(null,proxyIP,proxyPort,user);
+   public Socks4Proxy(InetAddress proxyIP, int proxyPort, String user) {
+      this(null, proxyIP, proxyPort, user);
    }
 
-//Public instance methods
-//========================
+   //Public instance methods
+   //========================
 
    /**
     * Creates a clone of this proxy. Changes made to the clone should not
     * affect this object. 
     */
-   public Object clone(){
-      Socks4Proxy newProxy = new Socks4Proxy(proxyIP,proxyPort,user);
+   public Object clone() {
+      Socks4Proxy newProxy = new Socks4Proxy(proxyIP, proxyPort, user);
       newProxy.directHosts = (InetRange)directHosts.clone();
       newProxy.chainProxy = chainProxy;
       return newProxy;
    }
 
 
-//Public Static(Class) Methods
-//==============================
+   //Public Static(Class) Methods
+   //==============================
 
 
-//Protected Methods
-//=================
+   //Protected Methods
+   //=================
 
-   protected Proxy copy(){
-       Socks4Proxy copy = new Socks4Proxy(proxyIP,proxyPort,user);
+   protected Proxy copy() {
+       Socks4Proxy copy = new Socks4Proxy(proxyIP, proxyPort, user);
        copy.directHosts = this.directHosts;
        copy.chainProxy = chainProxy;
        return copy;
     }
 
-   protected ProxyMessage formMessage(int cmd,InetAddress ip,int port){
-       switch(cmd){
+   protected ProxyMessage formMessage(int cmd, InetAddress ip, int port) {
+       switch(cmd) {
          case SOCKS_CMD_CONNECT:
            cmd = Socks4Message.REQUEST_CONNECT;
          break;
@@ -107,16 +105,16 @@ public class Socks4Proxy extends Proxy implements Cloneable{
          default:
            return null;
        }
-       return new Socks4Message(cmd,ip,port,user);
-   }
-   protected ProxyMessage formMessage(int cmd,String host,int port)
-             throws UnknownHostException{
-       return formMessage(cmd,InetAddress.getByName(host),port);
-   }
-   protected ProxyMessage formMessage(InputStream in)
-             throws SocksException,
-                    IOException{
-       return new Socks4Message(in,true);
+       return new Socks4Message(cmd, ip, port, user);
    }
 
+   protected ProxyMessage formMessage(int cmd, String host, int port)
+             throws UnknownHostException {
+       return formMessage(cmd, InetAddress.getByName(host), port);
+   }
+
+   protected ProxyMessage formMessage(InputStream in)
+             throws SocksException, IOException {
+       return new Socks4Message(in, true);
+   }
 }

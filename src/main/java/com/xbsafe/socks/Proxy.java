@@ -2,8 +2,6 @@ package com.xbsafe.socks;
 
 import java.net.*;
 import java.io.*;
-import java.util.Hashtable;
-import java.util.Enumeration;
 
 /**
   Abstract class Proxy, base for classes Socks4Proxy and Socks5Proxy.
@@ -11,9 +9,9 @@ import java.util.Enumeration;
   used by all classes of this package.
 */
 
-public abstract class Proxy{
+public abstract class Proxy {
 
-//Data members
+   //Data members
    protected InetRange directHosts = new InetRange();
 
    protected InetAddress proxyIP = null;
@@ -25,17 +23,15 @@ public abstract class Proxy{
    protected OutputStream out;
 
    protected int version;
-
    protected Proxy chainProxy = null;
 
-
-//Protected static/class variables
+   //Protected static/class variables
    protected static Proxy defaultProxy = null;
 
-//Constructors
-//====================
-   Proxy(Proxy chainProxy,
-         String proxyHost,int proxyPort)throws UnknownHostException{ 
+   //Constructors
+   //====================
+   Proxy(Proxy chainProxy, String proxyHost,int proxyPort)
+		   throws UnknownHostException { 
       this.chainProxy = chainProxy;
       this.proxyHost = proxyHost;
 
@@ -45,66 +41,70 @@ public abstract class Proxy{
       this.proxyPort = proxyPort;
    }
 
-  
-   Proxy(String proxyHost,int proxyPort)throws UnknownHostException{ 
-      this(null,proxyHost,proxyPort);
+   Proxy(String proxyHost, int proxyPort) throws UnknownHostException { 
+      this(null, proxyHost, proxyPort);
    }
 
-   Proxy(Proxy chainProxy,InetAddress proxyIP,int proxyPort){
+   Proxy(Proxy chainProxy, InetAddress proxyIP, int proxyPort) {
       this.chainProxy = chainProxy;
       this.proxyIP = proxyIP;
       this.proxyPort = proxyPort;
    }
 
-   Proxy(InetAddress proxyIP,int proxyPort){
-      this(null,proxyIP,proxyPort);
+   Proxy(InetAddress proxyIP, int proxyPort) {
+      this(null, proxyIP, proxyPort);
    }
 
-   Proxy(Proxy p){
+   Proxy(Proxy p) {
       this.proxyIP = p.proxyIP;
       this.proxyPort = p.proxyPort;
       this.version = p.version;
       this.directHosts = p.directHosts;
    }
 
-//Public instance methods
-//========================
+   //Public instance methods
+   //========================
 
    /**
       Get the port on which proxy server is running.
     * @return Proxy port.
     */
-   public int getPort(){
+   public int getPort() {
      return proxyPort;
    }
+
    /**
       Get the ip address of the proxy server host.
     * @return Proxy InetAddress.
     */
-   public InetAddress getInetAddress(){
+   public InetAddress getInetAddress() {
      return proxyIP;
    }
+
    /**
     * Adds given ip to the list of direct addresses.
     * This machine will be accessed without using proxy.
     */
-   public void addDirect(InetAddress ip){
+   public void addDirect(InetAddress ip) {
       directHosts.add(ip);
    }
+
    /**
     * Adds host to the list of direct addresses.
     * This machine will be accessed without using proxy.
     */
-   public boolean addDirect(String host){
+   public boolean addDirect(String host) {
       return directHosts.add(host);
    }
+
    /**
     * Adds given range of addresses to the lsit of direct addresses,
     * machines within this range will be accessed without using proxy.
     */
-   public void addDirect(InetAddress from,InetAddress to){
+   public void addDirect(InetAddress from,InetAddress to) {
       directHosts.add(from,to);
    }
+
    /**
     * Sets given InetRange as the list of direct address, previous
     * list will be discarded, any changes done previously with
@@ -113,7 +113,7 @@ public abstract class Proxy{
     * @param ir InetRange which should be used to look up direct addresses.
     * @see InetRange
     */
-   public void setDirect(InetRange ir){
+   public void setDirect(InetRange ir) {
      directHosts = ir;
    }
 
@@ -122,39 +122,42 @@ public abstract class Proxy{
     * @return Current range of direct address as InetRange object.
     * @see InetRange
     */
-   public InetRange getDirect(){
+   public InetRange getDirect() {
      return directHosts;
    }
+
    /**
       Check wether the given host is on the list of direct address.
       @param host Host name to check.
     * @return true if the given host is specified as the direct addresses.
     */
-    public boolean isDirect(String host){
+    public boolean isDirect(String host) {
         return directHosts.contains(host);
     }
+
    /**
       Check wether the given host is on the list of direct addresses.
       @param host Host address to check.
     * @return true if the given host is specified as the direct address.
     */
-    public boolean isDirect(InetAddress host){
+    public boolean isDirect(InetAddress host) {
         return directHosts.contains(host);
     }
+
     /**
       Set the proxy which should be used to connect to given proxy.
       @param chainProxy Proxy to use to connect to this proxy.
     */
-    public void setChainProxy(Proxy chainProxy){
+    public void setChainProxy(Proxy chainProxy) {
         this.chainProxy = chainProxy;
     }
-    
+
     /**
       Get proxy which is used to connect to this proxy.
       @return Proxy which is used to connect to this proxy, or null
               if proxy is to be contacted directly.
     */
-    public Proxy getChainProxy(){
+    public Proxy getChainProxy() {
        return chainProxy;
     }
 
@@ -162,13 +165,12 @@ public abstract class Proxy{
        Get string representation of this proxy.
      * @returns string in the form:proxyHost:proxyPort \t Version versionNumber
      */
-    public String toString(){
+    public String toString() {
        return (""+proxyIP.getHostName()+":"+proxyPort+"\tVersion "+version);
     }
 
-
-//Public Static(Class) Methods
-//==============================
+   //Public Static(Class) Methods
+   //==============================
 
    /**
     * Sets SOCKS4 proxy as default.
@@ -176,9 +178,9 @@ public abstract class Proxy{
       @param port Port on which SOCKS4 server is running.
       @param user Username to use for communications with proxy.
     */
-   public static void setDefaultProxy(String hostName,int port,String user)
-                             throws UnknownHostException{
-      defaultProxy = new Socks4Proxy(hostName,port,user);
+   public static void setDefaultProxy(String hostName, int port, String user)
+                             throws UnknownHostException {
+      defaultProxy = new Socks4Proxy(hostName, port, user);
    }
 
    /**
@@ -187,34 +189,36 @@ public abstract class Proxy{
       @param port Port on which SOCKS4 server is running.
       @param user Username to use for communications with proxy.
     */
-   public static void setDefaultProxy(InetAddress ipAddress,int port,
-                                      String user){
-      defaultProxy = new Socks4Proxy(ipAddress,port,user);
+   public static void setDefaultProxy(InetAddress ipAddress, int port, String user) {
+      defaultProxy = new Socks4Proxy(ipAddress, port, user);
    }
+
    /**
     * Sets SOCKS5 proxy as default.
     * Default proxy only supports no-authentication.
       @param hostName Host name on which SOCKS5 server is running.
       @param port Port on which SOCKS5 server is running.
     */
-   public static void setDefaultProxy(String hostName,int port)
-                             throws UnknownHostException{
-      defaultProxy = new Socks5Proxy(hostName,port);
+   public static void setDefaultProxy(String hostName, int port)
+                             throws UnknownHostException {
+      defaultProxy = new Socks5Proxy(hostName, port);
    }
+
    /**
     * Sets SOCKS5 proxy as default.
     * Default proxy only supports no-authentication.
       @param ipAddress Host address on which SOCKS5 server is running.
       @param port Port on which SOCKS5 server is running.
     */
-   public static void setDefaultProxy(InetAddress ipAddress,int port){
-      defaultProxy = new Socks5Proxy(ipAddress,port);
+   public static void setDefaultProxy(InetAddress ipAddress, int port) {
+      defaultProxy = new Socks5Proxy(ipAddress, port);
    }
+
    /**
     * Sets default proxy.
       @param p Proxy to use as default proxy.
     */
-   public static void setDefaultProxy(Proxy p){
+   public static void setDefaultProxy(Proxy p) {
      defaultProxy = p;
    }
 
@@ -222,7 +226,7 @@ public abstract class Proxy{
       Get current default proxy.
     * @return Current default proxy, or null if none is set.
     */
-   public static Proxy getDefaultProxy(){
+   public static Proxy getDefaultProxy() {
      return defaultProxy;
    }
 
@@ -238,7 +242,7 @@ public abstract class Proxy{
      @return Proxy created from the string, null if entry was somehow
              invalid(host unknown for example, or empty string)
    */
-   public static Proxy parseProxy(String proxy_entry){
+   public static Proxy parseProxy(String proxy_entry) {
 
       String proxy_host;
       int proxy_port = 1080;
@@ -246,13 +250,12 @@ public abstract class Proxy{
       String proxy_password = null;
       Proxy proxy;
 
-      java.util.StringTokenizer st = new java.util.StringTokenizer(
-                                         proxy_entry,":");
+      java.util.StringTokenizer st = new java.util.StringTokenizer(proxy_entry, ":");
       if(st.countTokens() < 1) return null;
 
       proxy_host = st.nextToken();
       if(st.hasMoreTokens())
-         try{
+         try {
            proxy_port = Integer.parseInt(st.nextToken().trim());
          }catch(NumberFormatException nfe){}
 
@@ -262,204 +265,196 @@ public abstract class Proxy{
       if(st.hasMoreTokens())
          proxy_password = st.nextToken();
 
-      try{
+      try {
          if(proxy_user == null)
            proxy = new Socks5Proxy(proxy_host,proxy_port);
          else if(proxy_password == null)
            proxy = new Socks4Proxy(proxy_host,proxy_port,proxy_user);
          else{
            proxy = new Socks5Proxy(proxy_host,proxy_port);
-           UserPasswordAuthentication upa = new UserPasswordAuthentication(
-                                            proxy_user, proxy_password);
+           UserPasswordAuthentication upa = 
+        		   new UserPasswordAuthentication(proxy_user, proxy_password);
 
-           ((Socks5Proxy)proxy).setAuthenticationMethod(upa.METHOD_ID,upa);
+           ((Socks5Proxy)proxy).setAuthenticationMethod(upa.METHOD_ID, upa);
          }
-      }catch(UnknownHostException uhe){
+      } catch(UnknownHostException uhe) {
          return null;
       }
 
       return proxy;
    }
 
+   //Protected Methods
+   //=================
 
-//Protected Methods
-//=================
-
-   protected void startSession()throws SocksException{
-       try{
+   protected void startSession() throws SocksException {
+       try {
          if(chainProxy == null)
-            proxySocket = new Socket(proxyIP,proxyPort);
+            proxySocket = new Socket(proxyIP, proxyPort);
          else if(proxyIP != null)
-            proxySocket = new SocksSocket(chainProxy,proxyIP,proxyPort);
+            proxySocket = new SocksSocket(chainProxy, proxyIP, proxyPort);
          else
-            proxySocket = new SocksSocket(chainProxy,proxyHost,proxyPort);
+            proxySocket = new SocksSocket(chainProxy, proxyHost, proxyPort);
 
          in = proxySocket.getInputStream();
          out = proxySocket.getOutputStream();
-       }catch(SocksException se){
+       } catch(SocksException se) {
          throw se;
-       }catch(IOException io_ex){
-         throw new SocksException(SOCKS_PROXY_IO_ERROR,""+io_ex);
+       } catch(IOException io_ex) {
+         throw new SocksException(SOCKS_PROXY_IO_ERROR, "" + io_ex);
        }
    }
 
    protected abstract Proxy copy();
-   protected abstract ProxyMessage formMessage(int cmd,InetAddress ip,int port);
-   protected abstract ProxyMessage formMessage(int cmd,String host,int port)
+   protected abstract ProxyMessage formMessage(int cmd, InetAddress ip, int port);
+   protected abstract ProxyMessage formMessage(int cmd, String host, int port)
              throws UnknownHostException;
    protected abstract ProxyMessage formMessage(InputStream in)
-             throws SocksException,
-                    IOException;
-   
+             throws SocksException, IOException;
 
-   protected ProxyMessage connect(InetAddress ip,int port)
-             throws SocksException{
-      try{
+   protected ProxyMessage connect(InetAddress ip,int port) throws SocksException {
+      try {
          startSession();
-         ProxyMessage request  = formMessage(SOCKS_CMD_CONNECT,
-			                     ip,port);
+         ProxyMessage request  = formMessage(SOCKS_CMD_CONNECT, ip, port);
          return exchange(request);
-      }catch(SocksException se){
-         endSession();
-         throw se;
-      }
-   }
-   protected ProxyMessage connect(String host,int port)
-             throws UnknownHostException,SocksException{
-      try{
-         startSession();
-         ProxyMessage request  = formMessage(SOCKS_CMD_CONNECT,
-			                     host,port);
-         return exchange(request);
-      }catch(SocksException se){
+      } catch(SocksException se) {
          endSession();
          throw se;
       }
    }
 
-   protected ProxyMessage bind(InetAddress ip,int port)
-             throws SocksException{
-      try{
+   protected ProxyMessage connect(String host, int port)
+             throws UnknownHostException, SocksException {
+      try {
          startSession();
-         ProxyMessage request  = formMessage(SOCKS_CMD_BIND,
-				             ip,port);
+         ProxyMessage request  = formMessage(SOCKS_CMD_CONNECT, host, port);
          return exchange(request);
-      }catch(SocksException se){
-         endSession();
-         throw se;
-      }
-   }
-   protected ProxyMessage bind(String host,int port)
-             throws UnknownHostException,SocksException{
-      try{
-         startSession();
-         ProxyMessage request  = formMessage(SOCKS_CMD_BIND,
-				             host,port);
-         return exchange(request);
-      }catch(SocksException se){
+      } catch(SocksException se) {
          endSession();
          throw se;
       }
    }
 
-   protected ProxyMessage accept()
-             throws IOException,SocksException{
+   protected ProxyMessage bind(InetAddress ip, int port)
+             throws SocksException {
+      try {
+         startSession();
+         ProxyMessage request = formMessage(SOCKS_CMD_BIND, ip, port);
+         return exchange(request);
+      } catch(SocksException se) {
+         endSession();
+         throw se;
+      }
+   }
+
+   protected ProxyMessage bind(String host, int port)
+             throws UnknownHostException, SocksException {
+      try {
+         startSession();
+         ProxyMessage request  = formMessage(SOCKS_CMD_BIND, host, port);
+         return exchange(request);
+      } catch(SocksException se) {
+         endSession();
+         throw se;
+      }
+   }
+
+   protected ProxyMessage accept() throws IOException,SocksException {
       ProxyMessage msg;
-      try{
+      try {
          msg = formMessage(in);
-      }catch(InterruptedIOException iioe){
+      } catch(InterruptedIOException iioe) {
          throw iioe;
-      }catch(IOException io_ex){
+      } catch(IOException io_ex) {
          endSession();
-         throw new SocksException(SOCKS_PROXY_IO_ERROR,"While Trying accept:"
-         +io_ex);
+         throw new SocksException(SOCKS_PROXY_IO_ERROR, "While Trying accept:" + io_ex);
       }
       return msg;
    }
 
-   protected ProxyMessage udpAssociate(InetAddress ip,int port)
-             throws SocksException{
-      try{
+   protected ProxyMessage udpAssociate(InetAddress ip, int port)
+             throws SocksException {
+      try {
          startSession();
-         ProxyMessage request  = formMessage(SOCKS_CMD_UDP_ASSOCIATE,
-				             ip,port);
+         ProxyMessage request  = formMessage(SOCKS_CMD_UDP_ASSOCIATE, ip, port);
          if(request != null)
            return exchange(request);
-      }catch(SocksException se){
+      } catch(SocksException se) {
          endSession();
          throw se;
       }
+
       //Only get here if request was null
       endSession();
       throw new SocksException(SOCKS_METHOD_NOTSUPPORTED,
       "This version of proxy does not support UDP associate, use version 5");
    }
-   protected ProxyMessage udpAssociate(String host,int port)
-             throws UnknownHostException,SocksException{
-      try{
+
+   protected ProxyMessage udpAssociate(String host, int port)
+             throws UnknownHostException, SocksException {
+      try {
          startSession();
-         ProxyMessage request  = formMessage(SOCKS_CMD_UDP_ASSOCIATE,
-				             host,port);
+         ProxyMessage request  = formMessage(SOCKS_CMD_UDP_ASSOCIATE, host, port);
          if(request != null) return exchange(request);
-      }catch(SocksException se){
+      } catch(SocksException se) {
          endSession();
          throw se;
       }
+
       //Only get here if request was null
       endSession();
       throw new SocksException(SOCKS_METHOD_NOTSUPPORTED,
-      "This version of proxy does not support UDP associate, use version 5");
+    		  "This version of proxy does not support UDP associate, use version 5");
    }
 
-
-   protected void endSession(){
-      try{
+   protected void endSession() {
+      try {
          if(proxySocket!=null) proxySocket.close();
          proxySocket = null;
-      }catch(IOException io_ex){
+      } catch(IOException io_ex) {
       }
    }
 
    /**
     *Sends the request to SOCKS server
     */
-   protected void sendMsg(ProxyMessage msg)throws SocksException,
-                                                  IOException{
+   protected void sendMsg(ProxyMessage msg)
+		   throws SocksException, IOException {
       msg.write(out);
    }
 
    /** 
     * Reads the reply from the SOCKS server
     */
-   protected ProxyMessage readMsg()throws SocksException,
-                                          IOException{
+   protected ProxyMessage readMsg()
+		   throws SocksException, IOException {
       return formMessage(in);
    }
+
    /**
     *Sends the request reads reply and returns it
     *throws exception if something wrong with IO
     *or the reply code is not zero
     */
    protected ProxyMessage exchange(ProxyMessage request)
-                           throws SocksException{
+                           throws SocksException {
       ProxyMessage reply;
-      try{
+      try {
          request.write(out);
          reply = formMessage(in);
-      }catch(SocksException s_ex){
+      } catch(SocksException s_ex) {
          throw s_ex;
-      }catch(IOException ioe){
-         throw(new SocksException(SOCKS_PROXY_IO_ERROR,""+ioe));
+      } catch(IOException ioe) {
+         throw(new SocksException(SOCKS_PROXY_IO_ERROR, "" + ioe));
       }
       return reply;
    }
 
+   //Private methods
+   //===============
 
-//Private methods
-//===============
 
-
-//Constants
+   //Constants
 
    public static final int SOCKS_SUCCESS		=0;
    public static final int SOCKS_FAILURE		=1;

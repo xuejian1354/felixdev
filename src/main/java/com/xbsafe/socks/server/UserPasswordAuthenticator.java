@@ -10,7 +10,7 @@ import java.net.Socket;
   This class implements SOCKS5 User/Password authentication scheme as
   defined in rfc1929,the server side of it.
 */
-public class UserPasswordAuthenticator extends  ServerAuthenticatorNone{
+public class UserPasswordAuthenticator extends ServerAuthenticatorNone{
 
    static final int METHOD_ID = 2;
 
@@ -22,32 +22,31 @@ public class UserPasswordAuthenticator extends  ServerAuthenticatorNone{
 
     @param v UserValidation to use for validating users.
    */
-   public UserPasswordAuthenticator(UserValidation validator){
+   public UserPasswordAuthenticator(UserValidation validator) {
       this.validator = validator;
    }
 
-   public ServerAuthenticator startSession(Socket s) throws IOException{
+   public ServerAuthenticator startSession(Socket s) throws IOException {
      InputStream in = s.getInputStream();
      OutputStream out = s.getOutputStream();
 
      if(in.read() != 5) return null; //Drop non version 5 messages.
 
-     if(!selectSocks5Authentication(in,out,METHOD_ID)) 
+     if(!selectSocks5Authentication(in, out, METHOD_ID)) 
        return null;
-     if(!doUserPasswordAuthentication(s,in,out))
+     if(!doUserPasswordAuthentication(s, in, out))
        return null;
 
-     return new ServerAuthenticatorNone(in,out);
+     return new ServerAuthenticatorNone(in, out);
    }
 
-
-//Private Methods
-//////////////////
+   //Private Methods
+   //////////////////
 
    private boolean doUserPasswordAuthentication(Socket s,
                                                 InputStream in,
-                                                OutputStream out) 
-                                                throws IOException{
+                                                OutputStream out)
+                                                		throws IOException {
      int version = in.read();
      if(version != 1) return false;
      int ulen = in.read();
@@ -59,12 +58,12 @@ public class UserPasswordAuthenticator extends  ServerAuthenticatorNone{
      byte[] password = new byte[plen];
      in.read(password);
 
-     if(validator.isUserValid(new String(user), new String(password),s)){
+     if(validator.isUserValid(new String(user), new String(password), s)) {
        //System.out.println("user valid");
-       out.write(new byte[]{1,0});
-     }else{
+       out.write(new byte[]{1, 0});
+     } else {
        //System.out.println("user invalid");
-       out.write(new byte[]{1,1});
+       out.write(new byte[]{1, 1});
        return false;
      }
 

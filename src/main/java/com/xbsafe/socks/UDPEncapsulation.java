@@ -8,7 +8,7 @@ package com.xbsafe.socks;
  provided to allow this encapsulation.
  @see Authentication
 */
-public interface UDPEncapsulation{
+public interface UDPEncapsulation {
 
     /**
     This method should provide any authentication depended transformation

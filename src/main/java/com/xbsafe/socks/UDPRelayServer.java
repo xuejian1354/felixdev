@@ -7,7 +7,7 @@ import java.io.*;
 /**
  UDP Relay server, used by ProxyServer to perform udp forwarding.
 */
-class UDPRelayServer implements Runnable{
+class UDPRelayServer implements Runnable {
 
 
     DatagramSocket client_sock; 
@@ -18,7 +18,7 @@ class UDPRelayServer implements Runnable{
     int relayPort;
     InetAddress relayIP;
 
-    Thread pipe_thread1,pipe_thread2;
+    Thread pipe_thread1, pipe_thread2;
     Thread master_thread;
 
     ServerAuthenticator auth;
@@ -44,32 +44,34 @@ class UDPRelayServer implements Runnable{
       in windows JVM which does not throw InterruptedIOException in
       threads which block in I/O operation.
     */
-    public UDPRelayServer(InetAddress clientIP,int clientPort,
-                          Thread master_thread,
-                          Socket controlConnection,
-                          ServerAuthenticator auth)
-                          throws IOException{
+    public UDPRelayServer(InetAddress clientIP,
+    						int clientPort,
+    						Thread master_thread,
+    						Socket controlConnection,
+    						ServerAuthenticator auth)
+    								throws IOException {
        this.master_thread = master_thread;
        this.controlConnection = controlConnection;
        this.auth = auth;
 
-       client_sock = new Socks5DatagramSocket(true,auth.getUdpEncapsulation(),
-                                              clientIP,clientPort);
+       client_sock = new Socks5DatagramSocket(true,
+    		   									auth.getUdpEncapsulation(),
+    		   									clientIP,clientPort);
+
        relayPort = client_sock.getLocalPort();
        relayIP   = client_sock.getLocalAddress();
 
        if(relayIP.getHostAddress().equals("0.0.0.0"))
-         relayIP   = InetAddress.getLocalHost();
+         relayIP = InetAddress.getLocalHost();
 
        if(proxy == null)
           remote_sock = new DatagramSocket();
        else
-          remote_sock = new Socks5DatagramSocket(proxy,0,null);
+          remote_sock = new Socks5DatagramSocket(proxy, 0, null);
     }
 
-
-//Public methods
-/////////////////
+   //Public methods
+   /////////////////
 
 
    /**
@@ -78,30 +80,30 @@ class UDPRelayServer implements Runnable{
     Default timeout is 3 minutes.
     */
 
-    static public void setTimeout(int timeout){
+    static public void setTimeout(int timeout) {
       iddleTimeout = timeout;
     }
-
 
    /**
      Sets the size of the datagrams used in the UDPRelayServer.<br>
      Default size is 64K, a bit more than maximum possible size of the
      datagram.
     */
-    static public void setDatagramSize(int size){
+    static public void setDatagramSize(int size) {
       datagramSize = size;
     }
 
     /**
       Port to which client should send datagram for association.
     */
-    public int getRelayPort(){
+    public int getRelayPort() {
        return relayPort;
     }
+
     /**
      IP address to which client should send datagrams for association.
     */
-    public InetAddress getRelayIP(){
+    public InetAddress getRelayIP() {
        return relayIP;
     }
 
@@ -109,16 +111,15 @@ class UDPRelayServer implements Runnable{
       Starts udp relay server.
       Spawns two threads of execution and returns.
     */
-    public void start() throws IOException{
+    public void start() throws IOException {
        remote_sock.setSoTimeout(iddleTimeout);
        client_sock.setSoTimeout(iddleTimeout);
 
-       log("Starting UDP relay server on "+relayIP+":"+relayPort);
-       log("Remote socket "+remote_sock.getLocalAddress()+":"+
-                            remote_sock.getLocalPort());
+       log("Starting UDP relay server on " + relayIP + ":" + relayPort);
+       log("Remote socket " + remote_sock.getLocalAddress() + ":" + remote_sock.getLocalPort());
 
-       pipe_thread1 = new Thread(this,"pipe1");
-       pipe_thread2 = new Thread(this,"pipe2");
+       pipe_thread1 = new Thread(this, "pipe1");
+       pipe_thread2 = new Thread(this, "pipe2");
 
        lastReadTime = System.currentTimeMillis();
 
@@ -131,31 +132,30 @@ class UDPRelayServer implements Runnable{
      <p>
      Does not close control connection, does not interrupt master_thread.
     */
-    public synchronized void stop(){
+    public synchronized void stop() {
        master_thread = null;
        controlConnection = null;
        abort();
     }
 
-//Runnable interface
-////////////////////
-    public void run(){
-       try{
+    //Runnable interface
+    ////////////////////
+    public void run() {
+       try {
           if(Thread.currentThread().getName().equals("pipe1"))
-             pipe(remote_sock,client_sock,false);
+             pipe(remote_sock, client_sock, false);
           else
-             pipe(client_sock,remote_sock,true);
-       }catch(IOException ioe){
-       }finally{
+             pipe(client_sock, remote_sock, true);
+       } catch(IOException ioe) {
+       } finally {
           abort();
-          log("UDP Pipe thread "+Thread.currentThread().getName()+" stopped.");
+          log("UDP Pipe thread " + Thread.currentThread().getName() + " stopped.");
        }
-
     }
 
-//Private methods
-/////////////////
-    private synchronized void abort(){
+    //Private methods
+    /////////////////
+    private synchronized void abort() {
        if(pipe_thread1 == null) return;
 
        log("Aborting UDP Relay Server");
@@ -164,9 +164,11 @@ class UDPRelayServer implements Runnable{
        client_sock.close();
 
        if(controlConnection != null) 
-          try{ controlConnection.close();} catch(IOException ioe){}
+          try {
+        	  controlConnection.close();
+          } catch(IOException ioe) {}
 
-       if(master_thread!=null) master_thread.interrupt();
+       if(master_thread != null) master_thread.interrupt();
 
        pipe_thread1.interrupt();
        pipe_thread2.interrupt();
@@ -174,30 +176,28 @@ class UDPRelayServer implements Runnable{
        pipe_thread1 = null;
     }
 
-
-    static private void log(String s){
-      if(log != null){
+    static private void log(String s) {
+      if(log != null) {
         log.println(s);
         log.flush();
       }
     }
 
-    private void pipe(DatagramSocket from,DatagramSocket to,boolean out)
-                             throws IOException{
+    private void pipe(DatagramSocket from, DatagramSocket to, boolean out) throws IOException {
        byte[] data = new byte[datagramSize];
        DatagramPacket dp = new DatagramPacket(data,data.length);
 
-       while(true){
-          try{
+       while(true) {
+          try {
             from.receive(dp);
             lastReadTime = System.currentTimeMillis();
 
             if(auth.checkRequest(dp,out))
                to.send(dp);
 
-          }catch(UnknownHostException uhe){
+          } catch(UnknownHostException uhe) {
             log("Dropping datagram for unknown host");
-          }catch(InterruptedIOException iioe){
+          } catch(InterruptedIOException iioe) {
             //log("Interrupted: "+iioe);
             //If we were interrupted by other thread.
             if(iddleTimeout == 0) return;

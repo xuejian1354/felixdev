@@ -40,12 +40,12 @@ import java.io.*;
  * remotely, or using some non-trivial authentication schemes, it can be done.
  */
 
-public class SocksSocket extends Socket{
+public class SocksSocket extends Socket {
    //Data members
    protected Proxy proxy;
    protected String localHost, remoteHost;
    protected InetAddress localIP, remoteIP;
-   protected int localPort,remotePort;
+   protected int localPort, remotePort;
 
    private Socket directSock = null;
 
@@ -58,10 +58,11 @@ public class SocksSocket extends Socket{
     * @see SocksSocket#SocksSocket(Proxy,String,int)
     * @see Socks5Proxy#resolveAddrLocally
     */
-   public SocksSocket(String host,int port)
-	  throws SocksException,UnknownHostException{
-      this(Proxy.defaultProxy,host,port);
+   public SocksSocket(String host, int port)
+	  throws SocksException,UnknownHostException {
+      this(Proxy.defaultProxy, host, port);
    }
+
    /**
     * Connects to host port using given proxy server.
       @param p Proxy to use.
@@ -92,23 +93,20 @@ public class SocksSocket extends Socket{
       @throws IOexception if anything is wrong with I/O.
       @see Socks5Proxy#resolveAddrLocally
     */
-   public SocksSocket(Proxy p,String host,int port)
-	  throws SocksException,UnknownHostException{
-
-
+   public SocksSocket(Proxy p, String host, int port)
+	  throws SocksException,UnknownHostException {
       if(p == null) throw new SocksException(Proxy.SOCKS_NO_PROXY);
       //proxy=p;
       proxy = p.copy();
       remoteHost = host;
       remotePort = port;
-      if(proxy.isDirect(host)){
+      if(proxy.isDirect(host)) {
          remoteIP = InetAddress.getByName(host);
          doDirect();
       }
       else
          processReply(proxy.connect(host,port));
    }
-
 
    /**
     * Tryies to connect to given ip and port
@@ -118,8 +116,8 @@ public class SocksSocket extends Socket{
       @param port Port to which to connect.
     * @see SocksSocket#SocksSocket(Proxy,String,int)
     */
-   public SocksSocket(InetAddress ip, int port) throws SocksException{
-      this(Proxy.defaultProxy,ip,port);
+   public SocksSocket(InetAddress ip, int port) throws SocksException {
+      this(Proxy.defaultProxy, ip, port);
    }
 
    /**
@@ -129,7 +127,7 @@ public class SocksSocket extends Socket{
       @param port Port to which to connect.
 
     */
-   public SocksSocket(Proxy p,InetAddress ip, int port) throws SocksException{
+   public SocksSocket(Proxy p, InetAddress ip, int port) throws SocksException {
       if(p == null) throw new SocksException(Proxy.SOCKS_NO_PROXY);
       this.proxy = p.copy();
       this.remoteIP = ip;
@@ -141,19 +139,19 @@ public class SocksSocket extends Socket{
         processReply(proxy.connect(ip,port));
    }
 
-
    /**
     * These 2 constructors are used by the SocksServerSocket.
     * This socket simply overrides remoteHost, remotePort
     */
-   protected SocksSocket(String  host,int port,Proxy proxy){
+   protected SocksSocket(String host, int port, Proxy proxy) {
       this.remotePort = port;
       this.proxy = proxy;
       this.localIP = proxy.proxySocket.getLocalAddress();
       this.localPort = proxy.proxySocket.getLocalPort();
       this.remoteHost = host;
    }
-   protected SocksSocket(InetAddress ip,int port,Proxy proxy){
+
+   protected SocksSocket(InetAddress ip, int port, Proxy proxy) {
       remoteIP = ip;
       remotePort = port;
       this.proxy = proxy;
@@ -166,35 +164,40 @@ public class SocksSocket extends Socket{
     * Same as Socket
     */
    public void close() throws IOException{
-      if(proxy!= null)proxy.endSession();
+      if(proxy!= null) proxy.endSession();
       proxy = null;
    }
+
    /**
     * Same as Socket
     */
-   public InputStream getInputStream(){
+   public InputStream getInputStream() {
       return proxy.in;
    }
+
    /**
     * Same as Socket
     */
-   public OutputStream getOutputStream(){
+   public OutputStream getOutputStream() {
       return proxy.out;
    }
+
    /**
     * Same as Socket
     */
-   public int getPort(){
+   public int getPort() {
       return remotePort;
    }
+
    /**
     * Returns remote host name, it is usefull in cases when addresses
     * are resolved by proxy, and we can't create InetAddress object.
       @return The name of the host this socket is connected to.
     */
-   public String getHost(){
+   public String getHost() {
       return remoteHost;
    }
+
    /**
     * Get remote host as InetAddress object, might return null if 
     * addresses are resolved by proxy, and it is not possible to resolve
@@ -203,13 +206,13 @@ public class SocksSocket extends Socket{
       if address was returned by the proxy as DOMAINNAME and can't be
       resolved locally.
     */
-   public InetAddress getInetAddress(){
-      if(remoteIP == null){
-	 try{
-	   remoteIP = InetAddress.getByName(remoteHost);
-	 }catch(UnknownHostException e){
-	   return null;
-	 }
+   public InetAddress getInetAddress() {
+      if(remoteIP == null) {
+	    try {
+	      remoteIP = InetAddress.getByName(remoteHost);
+	    } catch(UnknownHostException e){
+	      return null;
+	    }
       }
       return remoteIP;
    }
@@ -219,7 +222,7 @@ public class SocksSocket extends Socket{
     * the port on locall machine as in Socket. 
       @return Port of the socket used on the proxy server.
     */
-   public int getLocalPort(){
+   public int getLocalPort() {
       return localPort;
    }
 
@@ -230,100 +233,106 @@ public class SocksSocket extends Socket{
     * and it can't be resolved locally, use getLocalHost() then.
       @return Address proxy is using to make a connection.
     */
-   public InetAddress getLocalAddress(){
-      if(localIP == null){
-	 try{
-	    localIP = InetAddress.getByName(localHost);
-	 }catch(UnknownHostException e){
-	   return null;
-	 }
+   public InetAddress getLocalAddress() {
+      if(localIP == null) {
+	    try {
+	      localIP = InetAddress.getByName(localHost);
+	    } catch(UnknownHostException e){
+	      return null;
+	    }
       }
       return localIP;
    }
+
    /**
       Get name of the host, proxy has assigned to make a remote connection
       for this socket. This method is usefull when proxy have returned
       address as hostname, and we can't resolve it on this machine.
       @return The name of the host proxy is using to make a connection.
    */
-   public String getLocalHost(){
+   public String getLocalHost() {
       return localHost;
    }
 
    /**
      Same as socket.
    */
-   public void setSoLinger(boolean on,int val) throws SocketException{
-      proxy.proxySocket.setSoLinger(on,val);
+   public void setSoLinger(boolean on,int val) throws SocketException {
+      proxy.proxySocket.setSoLinger(on, val);
    }
+
    /**
      Same as socket.
    */
-   public int getSoLinger(int timeout) throws SocketException{
+   public int getSoLinger(int timeout) throws SocketException {
       return proxy.proxySocket.getSoLinger();
    }
+
    /**
      Same as socket.
    */
-   public void setSoTimeout(int timeout) throws SocketException{
+   public void setSoTimeout(int timeout) throws SocketException {
       proxy.proxySocket.setSoTimeout(timeout);
    }
+
    /**
      Same as socket.
    */
-   public int getSoTimeout(int timeout) throws SocketException{
+   public int getSoTimeout(int timeout) throws SocketException {
       return proxy.proxySocket.getSoTimeout();
    }
+
    /**
      Same as socket.
    */
-   public void setTcpNoDelay(boolean on) throws SocketException{
+   public void setTcpNoDelay(boolean on) throws SocketException {
      proxy.proxySocket.setTcpNoDelay(on);
    }
+
    /**
      Same as socket.
    */
-   public boolean getTcpNoDelay() throws SocketException{
+   public boolean getTcpNoDelay() throws SocketException {
      return proxy.proxySocket.getTcpNoDelay();
    }
 
    /**
      Get string representation of the socket.
    */
-   public String toString(){
-      if(directSock!=null) return "Direct connection:"+directSock;
-      return ("Proxy:"+proxy+";"+"addr:"+remoteHost+",port:"+remotePort
-                                +",localport:"+localPort);
-
+   public String toString() {
+      if(directSock!=null) return "Direct connection:" + directSock;
+      return ("Proxy:" + proxy + ";" + "addr:" + remoteHost +
+    		  ",port:" + remotePort + ",localport:"+localPort);
    }
 
-//Private Methods
-//////////////////
+   //Private Methods
+   //////////////////
 
-   private void processReply(ProxyMessage reply)throws SocksException{
+   private void processReply(ProxyMessage reply) throws SocksException {
       localPort = reply.port;
       /*
        * If the server have assigned same host as it was contacted on
        * it might return an address of all zeros
        */
-      if(reply.host.equals("0.0.0.0")){
+      if(reply.host.equals("0.0.0.0")) {
          localIP = proxy.proxyIP;
          localHost = localIP.getHostName();
-      }else{
+      } else {
          localHost = reply.host;
          localIP = reply.ip;
       }
    }
-   private void doDirect()throws SocksException{
-      try{
-         //System.out.println("IP:"+remoteIP+":"+remotePort);
-         directSock = new Socket(remoteIP,remotePort);
+
+   private void doDirect()throws SocksException {
+      try {
+         //System.out.println("IP:" + remoteIP + ":" + remotePort);
+         directSock = new Socket(remoteIP, remotePort);
          proxy.out = directSock.getOutputStream();
          proxy.in  = directSock.getInputStream();
          proxy.proxySocket = directSock;
          localIP = directSock.getLocalAddress();
          localPort = directSock.getLocalPort();
-      }catch(IOException io_ex){
+      } catch(IOException io_ex) {
          throw new SocksException(Proxy.SOCKS_DIRECT_FAILED,
                                   "Direct connect failed:"+io_ex);
       }

@@ -12,7 +12,7 @@ import java.net.Socket;
  Classes implementing this interface should provide socks server with
  authentication and authorization of users.
 **/
-public interface ServerAuthenticator{
+public interface ServerAuthenticator {
 
    /**
      This method is called when a new connection accepted by the server.
@@ -47,6 +47,7 @@ public interface ServerAuthenticator{
     function.
    */
    InputStream getInputStream();
+
    /**
     This method should return output stream to use to write to the accepted
     socket.
@@ -69,7 +70,6 @@ public interface ServerAuthenticator{
     This method is called on the object returned from the startSession
     function.
    */
-
    UDPEncapsulation getUdpEncapsulation();
 
    /**

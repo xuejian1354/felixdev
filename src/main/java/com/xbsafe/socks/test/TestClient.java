@@ -5,7 +5,7 @@ import java.net.*;
 import com.xbsafe.socks.*;
 import com.xbsafe.socks.Proxy;
 
-public class TestClient extends TestService{
+public class TestClient extends TestService {
    /** Proxy which should be used*/
    Proxy proxy;
    /** Host on which TestServer is running*/
@@ -17,13 +17,13 @@ public class TestClient extends TestService{
    BufferedReader in;
    Writer out;
 
-   public TestClient(Proxy p,String testHost){
+   public TestClient(Proxy p,String testHost) {
       this.proxy = p;
       this.testHost = testHost;
       if(log == null) log = System.out;
    }
 
-   public void start(){
+   public void start() {
       connectTests(true);
       acceptTests(true);
       udpTests(true);
@@ -33,8 +33,8 @@ public class TestClient extends TestService{
       udpTests(false);
    }
 
-   void connectTests(boolean useString){
-      try{
+   void connectTests(boolean useString) {
+      try {
          open(ECHO, useString);
          testEcho();
          s.close();
@@ -45,11 +45,11 @@ public class TestClient extends TestService{
 
          open(CHARGEN, useString);
 
-         for(int i = 0; i< 3;){
-            try{ 
+         for(int i = 0; i< 3;) {
+            try { 
                testChargen();
                break;
-            }catch(InterruptedIOException ioe){
+            } catch(InterruptedIOException ioe) {
                log("IO interrupted:"+i);
                i++;
             }
@@ -57,14 +57,14 @@ public class TestClient extends TestService{
 
          s.close();
 
-      }catch(IOException ioe){
+      } catch(IOException ioe) {
          ioe.printStackTrace();
       }
 
    }
 
-   void acceptTests(boolean useString){
-      try{
+   void acceptTests(boolean useString) {
+      try {
          testAccept(ECHO, useString);
          testEcho();
          s.close();
@@ -75,83 +75,79 @@ public class TestClient extends TestService{
 
          testAccept(CHARGEN, useString);
 
-         for(int i = 0; i< 3;){
-            try{ 
+         for(int i = 0; i< 3;) {
+            try { 
                testChargen();
                break;
-            }catch(InterruptedIOException ioe){
+            } catch(InterruptedIOException ioe) {
                log("IO interrupted:"+i);
                i++;
             }
          }
          s.close();
-
-      }catch(IOException ioe){
+      } catch(IOException ioe) {
          ioe.printStackTrace();
       }
    }
 
-   void udpTests(boolean useString){
+   void udpTests(boolean useString) {
       log("Udp tests are not yet implemented");
    }
 
-   void testEcho() throws IOException{
+   void testEcho() throws IOException {
       log("Testing echo.");
-      for(int i=0;i<5;++i){
-         out.write("String number "+i+"\r\n");
+      for(int i=0; i<5; ++i) {
+         out.write("String number " + i + "\r\n");
          out.flush();
-         log("Echo:"+in.readLine());;
+         log("Echo:" + in.readLine());
       }
       log("Echo finished");
    }
 
-   void testDiscard() throws IOException{
+   void testDiscard() throws IOException {
       log("Testing discard");
-      for(int i =0; i < 5;++i){
-         log("Sending discard message:"+i);
-         out.write("Discard message:"+i+"\r\n");
+      for(int i=0; i<5; ++i) {
+         log("Sending discard message:" + i);
+         out.write("Discard message:" + i + "\r\n");
          out.flush();
       }
       log("Discard finished");
    }
 
-   void testChargen() throws IOException{
+   void testChargen() throws IOException {
       log("Testing chargen");
-      String s;
-      s = in.readLine();
-      while(s!=null){
+      String s = in.readLine();
+      while(s != null) {
          log("ChGen:"+s);
          s = in.readLine();
       }
       log("Chargen finished.");
    }
 
-   void testAccept(int service,boolean useString)throws IOException{
-      open(CONNECT,useString);
+   void testAccept(int service, boolean useString) throws IOException {
+      open(CONNECT, useString);
 
       log("Testing accept");
       ServerSocket ss;
 
       if(useString)
-        ss = new SocksServerSocket(proxy,testHost,servicePorts[service]);
+        ss = new SocksServerSocket(proxy, testHost, servicePorts[service]);
       else
-        ss = new SocksServerSocket(proxy,InetAddress.getByName(testHost),
+        ss = new SocksServerSocket(proxy, InetAddress.getByName(testHost),
                                    servicePorts[service]);
-      log("Listenning on "+ss.getInetAddress()+":"+ss.getLocalPort());
+      log("Listenning on " + ss.getInetAddress() + ":" + ss.getLocalPort());
       ss.setSoTimeout(acceptTimeout);
  
-      out.write(""+ss.getLocalPort()+" "+service+"\r\n");
+      out.write("" + ss.getLocalPort() + " " + service + "\r\n");
       out.flush();
 
       String line = in.readLine();
-      if(line != null){
-        log("Accept failed:"+line);
+      if(line != null) {
+        log("Accept failed:" + line);
       }
-
       s.close();
-
       s = ss.accept();
-      log("Accepted:"+s);
+      log("Accepted:" + s);
 
       s.setSoTimeout(timeout);
 
@@ -161,13 +157,12 @@ public class TestClient extends TestService{
       ss.close();
    }
 
-   void open(int service,boolean useString) throws IOException{
+   void open(int service,boolean useString) throws IOException {
 
-      if(!useString){
-         s = new SocksSocket(proxy,InetAddress.getByName(testHost),
-                                   servicePorts[service]);
-      }else{
-         s = new SocksSocket(proxy,testHost,servicePorts[service]);
+      if(!useString) {
+         s = new SocksSocket(proxy, InetAddress.getByName(testHost), servicePorts[service]);
+      } else {
+         s = new SocksSocket(proxy, testHost, servicePorts[service]);
       }
 
       s.setSoTimeout(timeout);
@@ -179,19 +174,18 @@ public class TestClient extends TestService{
    //Main function
    ///////////////
 
-   static void usage(){
-      System.err.println(
-      "Usage: java Testclient testhost proxy [directhosts]");
+   static void usage() {
+      System.err.println("Usage: java Testclient testhost proxy [directhosts]");
    }
 
    static Proxy initProxy(String ps){
-      java.util.StringTokenizer st = new java.util.StringTokenizer(ps,",;");
+      java.util.StringTokenizer st = new java.util.StringTokenizer(ps, ",;");
       Proxy proxy = null;
-      while(st.hasMoreElements()){
+      while(st.hasMoreElements()) {
          String entry = st.nextToken();
          Proxy p = Proxy.parseProxy(entry);
-         if( p == null){
-           log("Proxy "+entry+" invalid.");
+         if( p == null) {
+           log("Proxy " + entry + " invalid.");
            return null;
          }
          p.setChainProxy(proxy);
@@ -199,19 +193,19 @@ public class TestClient extends TestService{
       }
       return proxy;
    }
-   static void addDirectHosts(Proxy p, String directHosts){
-      java.util.StringTokenizer st = new java.util.StringTokenizer(
-                                         directHosts,",;");
 
-      while(st.hasMoreElements()){
+   static void addDirectHosts(Proxy p, String directHosts) {
+      java.util.StringTokenizer st = new java.util.StringTokenizer(directHosts, ",;");
+
+      while(st.hasMoreElements()) {
          String entry = st.nextToken();
-         log("Adding direct host:"+entry);
+         log("Adding direct host:" + entry);
          p.addDirect(entry);
       }
    }
 
-   public static void main(String[] argv){
-      if(argv.length < 2){
+   public static void main(String[] argv) {
+      if(argv.length < 2) {
         usage();
         return;
       }
@@ -220,20 +214,20 @@ public class TestClient extends TestService{
 
       String testHost = argv[0];
       String proxyHost = argv[1];
-      String directHosts = argv.length >2 ? argv[2] : null;
+      String directHosts = argv.length > 2 ? argv[2] : null;
 
       Proxy p = initProxy(proxyHost);
-      if(p == null){
+      if(p == null) {
          log("Can't init proxy.");
          return;
       }
-      if(directHosts!=null) addDirectHosts(p,directHosts);
+
+      if(directHosts != null) addDirectHosts(p,directHosts);
 
       if(p instanceof Socks5Proxy)
          ((Socks5Proxy) p).resolveAddrLocally(false);
 
       TestClient tc = new TestClient(p,testHost);
       tc.start();
-      
    }
 }

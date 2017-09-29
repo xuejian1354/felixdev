@@ -32,7 +32,7 @@ import java.io.*;
   each time.
  
  */
-public class Socks5DatagramSocket extends DatagramSocket{
+public class Socks5DatagramSocket extends DatagramSocket {
 
    InetAddress relayIP;
    int relayPort;
@@ -49,10 +49,11 @@ public class Socks5DatagramSocket extends DatagramSocket{
       forwarding, throws SocksException.
 
     */
-   public Socks5DatagramSocket() throws SocksException,
-                                        IOException{
-      this(Proxy.defaultProxy,0,null);
+   public Socks5DatagramSocket()
+		   throws SocksException, IOException {
+      this(Proxy.defaultProxy, 0, null);
    }
+
    /**
       Construct Datagram socket for communication over SOCKS5 proxy
       server. And binds it to the specified local port.
@@ -61,10 +62,11 @@ public class Socks5DatagramSocket extends DatagramSocket{
       it is set to version4 proxy, which does not support datagram
       forwarding, throws SocksException.
     */
-   public Socks5DatagramSocket(int port) throws SocksException,
-                                                IOException{
-      this(Proxy.defaultProxy,port,null);
+   public Socks5DatagramSocket(int port)
+		   throws SocksException, IOException {
+      this(Proxy.defaultProxy, port, null);
    }
+
    /**
       Construct Datagram socket for communication over SOCKS5 proxy
       server. And binds it to the specified local port and address.
@@ -73,9 +75,9 @@ public class Socks5DatagramSocket extends DatagramSocket{
       it is set to version4 proxy, which does not support datagram
       forwarding, throws SocksException.
     */
-   public Socks5DatagramSocket(int port,InetAddress ip) throws SocksException,
-                                        IOException{
-      this(Proxy.defaultProxy,port,ip);
+   public Socks5DatagramSocket(int port, InetAddress ip)
+		   throws SocksException, IOException {
+      this(Proxy.defaultProxy, port, ip);
    }
 
    /**
@@ -93,22 +95,23 @@ public class Socks5DatagramSocket extends DatagramSocket{
      fails.
      See java.net.DatagramSocket for more details.
     */
-   public Socks5DatagramSocket(Proxy p,int port,InetAddress ip)
-                                        throws SocksException,
-                                               IOException{
-      super(port,ip);
+   public Socks5DatagramSocket(Proxy p, int port, InetAddress ip)
+		   throws SocksException, IOException {
+      super(port, ip);
       if(p == null) throw new SocksException(Proxy.SOCKS_NO_PROXY);
       if(!(p instanceof Socks5Proxy)) 
-         throw new SocksException(-1,"Datagram Socket needs Proxy version 5");
+         throw new SocksException(-1, "Datagram Socket needs Proxy version 5");
 
       if(p.chainProxy != null)
            throw new SocksException(Proxy.SOCKS_JUST_ERROR,
                "Datagram Sockets do not support proxy chaining.");
 
-      proxy =(Socks5Proxy) p.copy();
+      proxy = (Socks5Proxy) p.copy();
 
-      ProxyMessage msg = proxy.udpAssociate(super.getLocalAddress(),
-                                            super.getLocalPort());
+      ProxyMessage msg = proxy.udpAssociate(
+    		  					super.getLocalAddress(),
+    		  					super.getLocalPort());
+
       relayIP = msg.ip;
       if(relayIP.getHostAddress().equals("0.0.0.0")) relayIP = proxy.proxyIP;
       relayPort = msg.port;
@@ -122,9 +125,11 @@ public class Socks5DatagramSocket extends DatagramSocket{
    /**
      Used by UDPRelayServer.
     */
-   Socks5DatagramSocket(boolean server_mode,UDPEncapsulation encapsulation,
-                        InetAddress relayIP,int relayPort)
-                        throws IOException{
+   Socks5DatagramSocket(boolean server_mode,
+		   				UDPEncapsulation encapsulation,
+		   				InetAddress relayIP,
+		   				int relayPort)
+		   						throws IOException {
       super();
       this.server_mode = server_mode;
       this.relayIP = relayIP;
@@ -146,27 +151,28 @@ public class Socks5DatagramSocket extends DatagramSocket{
      @param dp Datagram to send.
      @throws IOException If error happens with I/O.
     */
-   public void send(DatagramPacket dp) throws IOException{
+   public void send(DatagramPacket dp) throws IOException {
      //If the host should be accessed directly, send it as is.
-     if(!server_mode && proxy.isDirect(dp.getAddress())){
+     if(!server_mode && proxy.isDirect(dp.getAddress())) {
         super.send(dp);
         //debug("Sending directly:");
         return;
      }
 
-     byte[] head = formHeader(dp.getAddress(),dp.getPort());
+     byte[] head = formHeader(dp.getAddress(), dp.getPort());
      byte[] buf = new byte[head.length + dp.getLength()];
      byte[] data = dp.getData();
      //Merge head and data
-     System.arraycopy(head,0,buf,0,head.length);
+     System.arraycopy(head, 0, buf, 0, head.length);
      //System.arraycopy(data,dp.getOffset(),buf,head.length,dp.getLength());
-     System.arraycopy(data,0,buf,head.length,dp.getLength());
+     System.arraycopy(data, 0, buf, head.length, dp.getLength());
 
      if(encapsulation != null)
-        buf = encapsulation.udpEncapsulate(buf,true);
+        buf = encapsulation.udpEncapsulate(buf, true);
 
-     super.send(new DatagramPacket(buf,buf.length,relayIP,relayPort));
+     super.send(new DatagramPacket(buf, buf.length, relayIP, relayPort));
    }
+
    /**
      This method allows to send datagram packets with address type DOMAINNAME.
      SOCKS5 allows to specify host as names rather than ip addresses.Using
@@ -182,29 +188,29 @@ public class Socks5DatagramSocket extends DatagramSocket{
      resolved when proxy settings say that hosts should be resolved locally.
      @see Socks5Proxy#resolveAddrLocally(boolean)
     */
-   public void send(DatagramPacket dp, String host) throws IOException{
-     if(proxy.isDirect(host)){
+   public void send(DatagramPacket dp, String host) throws IOException {
+     if(proxy.isDirect(host)) {
         dp.setAddress(InetAddress.getByName(host));
         super.send(dp);
         return;
      }
 
-     if(((Socks5Proxy)proxy).resolveAddrLocally){
+     if(((Socks5Proxy)proxy).resolveAddrLocally) {
         dp.setAddress(InetAddress.getByName(host));
      }
 
-     byte[] head = formHeader(host,dp.getPort());
+     byte[] head = formHeader(host, dp.getPort());
      byte[] buf = new byte[head.length + dp.getLength()];
      byte[] data = dp.getData();
      //Merge head and data
-     System.arraycopy(head,0,buf,0,head.length);
-     //System.arraycopy(data,dp.getOffset(),buf,head.length,dp.getLength());
-     System.arraycopy(data,0,buf,head.length,dp.getLength());
+     System.arraycopy(head, 0, buf, 0, head.length);
+     //System.arraycopy(data, dp.getOffset(), buf, head.length, dp.getLength());
+     System.arraycopy(data, 0, buf, head.length, dp.getLength());
 
      if(encapsulation != null)
-        buf = encapsulation.udpEncapsulate(buf,true);
+        buf = encapsulation.udpEncapsulate(buf, true);
 
-     super.send(new DatagramPacket(buf,buf.length,relayIP,relayPort));
+     super.send(new DatagramPacket(buf, buf.length, relayIP, relayPort));
    }
 
    /**
@@ -217,29 +223,26 @@ public class Socks5DatagramSocket extends DatagramSocket{
     * For hostnames and IPV6 it is even more.
       @param dp Datagram in which all relevent information will be copied.
     */
-   public void receive(DatagramPacket dp) throws IOException{
+   public void receive(DatagramPacket dp) throws IOException {
       super.receive(dp);
 
-      if(server_mode){
+      if(server_mode) {
         //Drop all datagrams not from relayIP/relayPort
          int init_length = dp.getLength();
          int initTimeout = getSoTimeout();
          long startTime = System.currentTimeMillis();
 
-         while(!relayIP.equals(dp.getAddress()) ||
-                relayPort != dp.getPort()){
-
+         while(!relayIP.equals(dp.getAddress()) || relayPort != dp.getPort()) {
            //Restore datagram size
            dp.setLength(init_length);
 
            //If there is a non-infinit timeout on this socket
            //Make sure that it happens no matter how often unexpected
            //packets arrive.
-           if(initTimeout != 0){
-             int newTimeout = initTimeout - (int)(System.currentTimeMillis() - 
-                                                        startTime);
-             if(newTimeout <= 0) throw new InterruptedIOException(
-                                 "In Socks5DatagramSocket->receive()");
+           if(initTimeout != 0) {
+             int newTimeout = initTimeout - (int)(System.currentTimeMillis() - startTime);
+             if(newTimeout <= 0)
+            	 throw new InterruptedIOException("In Socks5DatagramSocket->receive()");
              setSoTimeout(newTimeout);
            }
 
@@ -249,8 +252,7 @@ public class Socks5DatagramSocket extends DatagramSocket{
          //Restore timeout settings
          if(initTimeout != 0) setSoTimeout(initTimeout);
 
-      }else if(!relayIP.equals(dp.getAddress()) ||
-                relayPort != dp.getPort()) 
+      } else if(!relayIP.equals(dp.getAddress()) || relayPort != dp.getPort()) 
           return; // Recieved direct packet
       //If the datagram is not from the relay server, return it it as is.
 
@@ -258,14 +260,12 @@ public class Socks5DatagramSocket extends DatagramSocket{
       data = dp.getData();
 
       if(encapsulation != null)
-         data = encapsulation.udpEncapsulate(data,false);
+         data = encapsulation.udpEncapsulate(data, false);
 
       int offset = 0; //Java 1.1
       //int offset = dp.getOffset(); //Java 1.2
 
-      ByteArrayInputStream bIn = new ByteArrayInputStream(data,offset,
-                                                              dp.getLength());
-
+      ByteArrayInputStream bIn = new ByteArrayInputStream(data, offset, dp.getLength());
 
       ProxyMessage msg = new Socks5Message(bIn);
       dp.setPort(msg.port);
@@ -274,10 +274,7 @@ public class Socks5DatagramSocket extends DatagramSocket{
       //what wasn't read by the Message is the data
       int data_length = bIn.available();
       //Shift data to the left
-      System.arraycopy(data,offset+dp.getLength()-data_length,
-                       data,offset,data_length);
-
-
+      System.arraycopy(data, offset+dp.getLength()-data_length, data, offset, data_length);
       dp.setLength(data_length);
    }
 
@@ -287,17 +284,18 @@ public class Socks5DatagramSocket extends DatagramSocket{
       @return Port assigned by socks server to which datagrams are send
       for association.
     */
-   public int getLocalPort(){
+   public int getLocalPort() {
      if(server_mode) return super.getLocalPort();
      return relayPort;
    }
+
    /**
     * Address assigned by the proxy, to which datagrams are send for relay.
     * It is not necesseraly the same address, to which other party should send
     * datagrams.
       @return Address to which datagrams are send for association.
     */
-   public InetAddress getLocalAddress(){
+   public InetAddress getLocalAddress() {
      if(server_mode) return super.getLocalAddress();
      return relayIP;
    }
@@ -305,7 +303,7 @@ public class Socks5DatagramSocket extends DatagramSocket{
    /**
     * Closes datagram socket, and proxy connection.
     */
-   public void close(){
+   public void close() {
       if(!server_mode) proxy.endSession();
       super.close();
    }
@@ -335,47 +333,44 @@ public class Socks5DatagramSocket extends DatagramSocket{
      @return true if connection to proxy is active, false if eof or error
              condition have been encountered on the connection.
    */
-   public boolean isProxyAlive(int timeout){
+   public boolean isProxyAlive(int timeout) {
      if(server_mode) return false;
-     if(proxy != null){
-         try{
+     if(proxy != null) {
+         try {
            proxy.proxySocket.setSoTimeout(timeout);
 
            int eof = proxy.in.read();
            if(eof < 0) return false; // EOF encountered.
            else return true;         // This really should not happen
 
-         }catch(InterruptedIOException iioe){
+         } catch(InterruptedIOException iioe) {
             return true;          // read timed out.
-         }catch(IOException ioe){
+         } catch(IOException ioe) {
             return false;
          }
      }
      return false;
    }
 
-//PRIVATE METHODS
-//////////////////
+   //PRIVATE METHODS
+   //////////////////
 
-
-   private byte[] formHeader(InetAddress ip, int port){
-      Socks5Message request = new Socks5Message(0,ip,port);
+   private byte[] formHeader(InetAddress ip, int port) {
+      Socks5Message request = new Socks5Message(0, ip, port);
       request.data[0] = 0;
       return request.data;
    }
 
-
-   private byte[] formHeader(String host,int port){
-      Socks5Message request = new Socks5Message(0,host,port);
+   private byte[] formHeader(String host, int port) {
+      Socks5Message request = new Socks5Message(0, host, port);
       request.data[0] = 0;
       return request.data;
    }
 
+   /*======================================================================
 
-/*======================================================================
-
-//Mainly Test functions
-//////////////////////
+   //Mainly Test functions
+   //////////////////////
 
    private String bytes2String(byte[] b){
       String s="";
@@ -482,7 +477,5 @@ public class Socks5DatagramSocket extends DatagramSocket{
       }else{
 	usage();
       }
-   }
-*/
-
+   }*/
 }

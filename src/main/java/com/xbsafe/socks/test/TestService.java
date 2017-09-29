@@ -6,12 +6,12 @@ import java.net.*;
 /**
   Server to used perform tests for SOCKS library.
 */
-public class TestService implements Runnable{
-  static final String chargenSequence = " !\"#$%&'()*+,-./0123456789:;<=>?@"+
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefg";
+public class TestService implements Runnable {
+  static final String chargenSequence = " !\"#$%&'()*+,-./0123456789:;<=>?@" +
+		  "ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefg";
 
-  static final String serviceNames[] = {"echo","discard","chargen","connect"};
-  static final int    servicePorts[] = {5678,5679,5680,5681};
+  static final String serviceNames[] = {"echo", "discard", "chargen", "connect"};
+  static final int    servicePorts[] = {5678, 5679, 5680, 5681};
 
   static final int ECHO		= 0;
   static final int DISCARD	= 1;
@@ -36,7 +36,7 @@ public class TestService implements Runnable{
    @param s Socket on which to perform service.
    @param service Service which to provide.
   */
-  public TestService(Socket s, int service){
+  public TestService(Socket s, int service) {
     this.s = s;
     this.service = service;
   }
@@ -44,19 +44,22 @@ public class TestService implements Runnable{
   /**
    Default constructor.
   */
-  public TestService(){
+  public TestService() {
     this.s = null;
     this.service = -1;
   }
 
-  public void run(){
-     try{
+  public void run() {
+     try {
        serve(s,service);
-     }catch(IOException ioe){
-	 log("Exception:"+ioe);
-	 ioe.printStackTrace();
+     } catch (IOException ioe) {
+	   log("Exception:"+ioe);
+	   ioe.printStackTrace();
      }
-     try{ s.close();}catch(IOException ioe){}
+
+     try {
+    	 s.close();
+     } catch(IOException ioe) {}
   }
 
   //Static functions
@@ -69,9 +72,9 @@ public class TestService implements Runnable{
    @return Integer identifier for this servuce, or -1, if service
            can't be found.
   */
-  static public int getServiceId(String serviceName){
+  static public int getServiceId(String serviceName) {
      serviceName = serviceName.toLowerCase();
-     for(int i = 0;i < serviceNames.length;++i)
+     for(int i = 0; i < serviceNames.length; ++i)
         if(serviceName.equals(serviceNames[i]))
            return i;
 
@@ -87,40 +90,46 @@ public class TestService implements Runnable{
     @param service Id of the service to perform.
     @return true if service have been found, false otherwise.
   */
-  static public boolean serve(Socket s, int service) throws IOException{
-    switch(service){
+  static public boolean serve(Socket s, int service) throws IOException {
+    switch(service) {
       case ECHO:
         echo(s);
       break;
+
       case DISCARD:
         discard(s);
       break;
+
       case CHARGEN:
-        chargen(s,CHARGEN_WAIT,MAX_WAIT);
+        chargen(s, CHARGEN_WAIT,MAX_WAIT);
       break;
+
       case CONNECT:
         connect(s);
       break;
+
       default:
          log("Unknown service:"+service);
+
 	 return false;
     }
-     return true;
+
+    return true;
   }
+
   /**
     Echos any input on the socket to the output.
     Echo is being done line by line.
     @param s Socket on which to perform service.
   */
-  static public void echo(Socket s) throws IOException{
-    BufferedReader in = new BufferedReader(new InputStreamReader(
-					       s.getInputStream()));
+  static public void echo(Socket s) throws IOException {
+    BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
     OutputStream out = s.getOutputStream();
 
-    log("Starting \"echo\" on "+s);
+    log("Starting \"echo\" on " + s);
 
     String line = in.readLine();
-    while(line != null){
+    while(line != null) {
        out.write((line+"\n").getBytes());
        log(line);
        line = in.readLine();
@@ -134,13 +143,12 @@ public class TestService implements Runnable{
     logs input in line by line fashion.
     @param s Socket on which to perform service.
   */
-  static public void discard(Socket s) throws IOException{
-    BufferedReader in = new BufferedReader(new InputStreamReader(
-					       s.getInputStream()));
-    log("Starting discard on "+s);
+  static public void discard(Socket s) throws IOException {
+    BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
+    log("Starting discard on " + s);
 
     String line = in.readLine();
-    while(line != null){
+    while(line != null) {
        log(line);
        line = in.readLine();
     }
@@ -165,30 +173,31 @@ public class TestService implements Runnable{
     @param max_wait Time in ms, after reaching timeout greater than this
 		    value, chargen will stop.
   */
-  static public void chargen(Socket s,long wait_time,long max_wait)
-		     throws IOException{
+  static public void chargen(Socket s, long wait_time, long max_wait) 
+		  throws IOException {
     byte[] buf = chargenSequence.getBytes();
     int pos = 0;
     OutputStream out = s.getOutputStream();
     InputStream in = s.getInputStream();
     s.setSoTimeout(100); //0.1 ms
 
-    log("Starting \"chargen\" on "+s);
-    while(true){
+    log("Starting \"chargen\" on " + s);
+    while(true) {
        log("Sending message.");
-       out.write(buf,pos,buf.length - pos);
-       out.write(buf,0,pos);       
+       out.write(buf, pos, buf.length - pos);
+       out.write(buf, 0, pos);       
        out.write("\n".getBytes());
        pos++;
-       try{
-	  if(wait_time > max_wait) break;
 
-	  log("Going to sleep for "+wait_time+" ms.");
-          Thread.currentThread().sleep(wait_time);
-	  wait_time *= 2;
-	  if(in.read() < 0) break; //Connection closed
-       }catch(InterruptedException ie){
-       }catch(InterruptedIOException ioe){
+       try {
+	     if(wait_time > max_wait) break;
+
+	     log("Going to sleep for "+wait_time+" ms.");
+         Thread.currentThread().sleep(wait_time);
+	     wait_time *= 2;
+	     if(in.read() < 0) break; //Connection closed
+       } catch(InterruptedException ie) {
+       } catch(InterruptedIOException ioe) {
        }
     }
     log("Chargen finished.");
@@ -206,45 +215,46 @@ public class TestService implements Runnable{
 
     @param s Control connection.
   */
-  static public void connect(Socket s)throws IOException{
+  static public void connect(Socket s) throws IOException {
     String line = null;
     Socket sock;
     int port;
     int service_id;
 
-    BufferedReader in = new BufferedReader(new InputStreamReader(
-					       s.getInputStream()));
+    BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
     OutputStream out = s.getOutputStream();
 
-    log("Starting \"connect\" on "+s);
+    log("Starting \"connect\" on " + s);
     line = in.readLine();
     if(line == null) return; //They closed connection
 
     java.util.StringTokenizer st = new java.util.StringTokenizer(line);
-    if(st.countTokens() < 2){ //We need at least 'port' and "id"
+    if(st.countTokens() < 2) { //We need at least 'port' and "id"
        out.write("Expect: port serviceId.\n".getBytes());
        log("Invalid arguments.");
        return;
     }
-    try{
+
+    try {
        port = Integer.parseInt(st.nextToken());
        service_id = Integer.parseInt(st.nextToken());
-    }catch(NumberFormatException nfe){
+    } catch(NumberFormatException nfe) {
        out.write("Expect: port serviceId.\n".getBytes());
        log("Invalid arguments.");
        return;
     }
-    try{
-      log("Connecting to "+s.getInetAddress()+":"+port);
-      sock = new Socket(s.getInetAddress(),port);
-    }catch(IOException ioe){
-      out.write(("Connect to "+s.getInetAddress()+
-		 ":"+port+" failed").getBytes());
+
+    try {
+      log("Connecting to " + s.getInetAddress() + ":" + port);
+      sock = new Socket(s.getInetAddress(), port);
+    } catch(IOException ioe) {
+      out.write(("Connect to " + s.getInetAddress() + ":" + port + " failed").getBytes());
       log("Connect failed.");
       return;
     }
+
     s.close();
-    log("About to serve "+service_id);
+    log("About to serve " + service_id);
     serve(sock,service_id);
   }
 
@@ -253,11 +263,10 @@ public class TestService implements Runnable{
     @param in  Input stream.
     @param out Output stream.
   */
-  static public void pipe(InputStream in, OutputStream out)
-                          throws IOException{
+  static public void pipe(InputStream in, OutputStream out) throws IOException {
     byte[] buf = new byte[BUF_SIZE];
     int bread = 0;
-    while(bread >= 0){
+    while(bread >= 0) {
        bread = in.read(buf);
        out.write(buf,0,bread);
     }
@@ -266,8 +275,7 @@ public class TestService implements Runnable{
   /**
     Performs logging.
   */
-  static synchronized void log(String s){
+  static synchronized void log(String s) {
      if(log != null) log.println(s);
   }
-
 }

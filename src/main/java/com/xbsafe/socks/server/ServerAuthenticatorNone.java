@@ -5,7 +5,6 @@ import com.xbsafe.socks.UDPEncapsulation;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.DataInputStream;
 import java.io.OutputStream;
 import java.io.PushbackInputStream;
 import java.net.Socket;
@@ -35,9 +34,9 @@ For Example: <tt><pre>
    }
 </pre></tt>
 */
-public class ServerAuthenticatorNone implements ServerAuthenticator{
+public class ServerAuthenticatorNone implements ServerAuthenticator {
 
-   static final byte[] socks5response = {5,0};
+   static final byte[] socks5response = {5, 0};
 
    InputStream in;
    OutputStream out;
@@ -45,85 +44,87 @@ public class ServerAuthenticatorNone implements ServerAuthenticator{
    /**
     Creates new instance of the ServerAuthenticatorNone.
    */
-   public ServerAuthenticatorNone(){
+   public ServerAuthenticatorNone() {
      this.in = null;
      this.out = null;
    }
+
    /**
     Constructs new ServerAuthenticatorNone object suitable for returning
     from the startSession function.
     @param in Input stream to return from getInputStream method.
     @param out Output stream to return from getOutputStream method.
    */
-   public ServerAuthenticatorNone(InputStream in, OutputStream out){
+   public ServerAuthenticatorNone(InputStream in, OutputStream out) {
       this.in = in;
       this.out = out;
    }
+
    /**
     Grants access to everyone.Removes authentication related bytes from
     the stream, when a SOCKS5 connection is being made, selects an
     authentication NONE.
     */
-   public ServerAuthenticator startSession(Socket s)
-                                  throws IOException{
+   public ServerAuthenticator startSession(Socket s) throws IOException {
 
      PushbackInputStream in =  new PushbackInputStream(s.getInputStream());
      OutputStream out = s.getOutputStream();
 
      int version = in.read();
-     if(version == 5){
-       if(!selectSocks5Authentication(in,out,0))
+     if(version == 5) {
+       if(!selectSocks5Authentication(in, out, 0))
           return null;
-     }else if(version == 4){
+     }else if(version == 4) {
        //Else it is the request message allready, version 4
        in.unread(version);
      }else
        return null;
-     
 
-     return new ServerAuthenticatorNone(in,out);
+     return new ServerAuthenticatorNone(in, out);
    }
 
    /**
      Get input stream.
      @return Input stream speciefied in the constructor.
    */
-   public InputStream getInputStream(){
+   public InputStream getInputStream() {
       return in;
    }
+
    /**
      Get output stream.
      @return Output stream speciefied in the constructor.
    */
-   public OutputStream getOutputStream(){
+   public OutputStream getOutputStream() {
       return out;
    }
+
    /**
      Allways returns null.
      @return null
    */
-   public UDPEncapsulation getUdpEncapsulation(){
+   public UDPEncapsulation getUdpEncapsulation() {
       return null;
    }
 
    /**
     Allways returns true.
    */
-   public boolean checkRequest(ProxyMessage msg){
+   public boolean checkRequest(ProxyMessage msg) {
      return true;
    }
 
    /**
     Allways returns true.
    */
-   public boolean checkRequest(java.net.DatagramPacket dp, boolean out){
+   public boolean checkRequest(java.net.DatagramPacket dp, boolean out) {
      return true;
    }
 
    /**
     Does nothing.
     */
-   public void endSession(){
+   public void endSession() {
    }
 
    /**
@@ -143,8 +144,8 @@ public class ServerAuthenticatorNone implements ServerAuthenticator{
    static public boolean selectSocks5Authentication(InputStream in, 
                                                     OutputStream out,
                                                     int methodId)
-                                                    throws IOException{
-                                                    
+                                                    		throws IOException {
+
       int num_methods = in.read();
       if (num_methods <= 0) return false;
       byte method_ids[] = new byte[num_methods];
@@ -156,10 +157,10 @@ public class ServerAuthenticatorNone implements ServerAuthenticator{
 
       int bread = 0; //bytes read so far
       while(bread < num_methods)
-         bread += in.read(method_ids,bread,num_methods-bread);
+         bread += in.read(method_ids, bread, num_methods-bread);
 
-      for(int i=0;i<num_methods;++i)
-         if(method_ids[i] == methodId){
+      for(int i=0; i < num_methods; ++i)
+         if(method_ids[i] == methodId) {
            found = true;
            response[1] = (byte) methodId;
            break;

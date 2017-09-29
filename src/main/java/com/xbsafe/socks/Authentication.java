@@ -4,7 +4,7 @@ package com.xbsafe.socks;
  The Authentication interface provides for performing method specific
  authentication for SOCKS5 connections.
 */
-public interface Authentication{
+public interface Authentication {
    /**
      This method is called when SOCKS5 server have selected a particular
      authentication method, for whch an implementaion have been registered.

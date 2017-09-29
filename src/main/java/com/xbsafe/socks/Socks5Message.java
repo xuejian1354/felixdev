@@ -11,18 +11,17 @@ import java.net.UnknownHostException;
  SOCKS5 request/response message.
 */
 
-class Socks5Message extends ProxyMessage{
+class Socks5Message extends ProxyMessage {
    /** Address type of given message*/
    public int addrType;
-
    byte[] data;
 
    /**
     Server error response.
     @param cmd Error code.
    */
-   public Socks5Message(int cmd){
-      super(cmd,null,0);
+   public Socks5Message(int cmd) {
+      super(cmd, null, 0);
       data = new byte[3];
       data[0] = SOCKS_VERSION; //Version.
       data[1] = (byte)cmd;     //Reply code for some kind of failure.
@@ -35,21 +34,20 @@ class Socks5Message extends ProxyMessage{
     @param ip  - IP field.
     @paarm port - port field.
    */
-   public Socks5Message(int cmd,InetAddress ip,int port){
-      super(cmd,ip,port);
-      this.host = ip==null?"0.0.0.0":ip.getHostName();
+   public Socks5Message(int cmd, InetAddress ip, int port) {
+      super(cmd, ip, port);
+      this.host = ip == null ? "0.0.0.0" : ip.getHostName();
       this.version = SOCKS_VERSION;
 
       byte[] addr;
 
-      if(ip == null){
+      if(ip == null) {
          addr = new byte[4];
          addr[0]=addr[1]=addr[2]=addr[3]=0;
-      }else
+      } else
          addr = ip.getAddress();
 
-      addrType = addr.length == 4 ? SOCKS_ATYP_IPV4
-                                  : SOCKS_ATYP_IPV6;
+      addrType = addr.length == 4 ? SOCKS_ATYP_IPV4 : SOCKS_ATYP_IPV6;
  
       data = new byte[6+addr.length];
       data[0] = (byte) SOCKS_VERSION;		//Version
@@ -58,7 +56,7 @@ class Socks5Message extends ProxyMessage{
       data[3] = (byte) addrType;		//Address type
  
       //Put Address
-      System.arraycopy(addr,0,data,4,addr.length);
+      System.arraycopy(addr, 0, data, 4, addr.length);
       //Put port
       data[data.length-2] = (byte)(port>>8);
       data[data.length-1] = (byte)(port);
@@ -71,8 +69,8 @@ class Socks5Message extends ProxyMessage{
     @param hostName  - IP field as hostName, uses ADDR_TYPE of HOSTNAME.
     @paarm port - port field.
    */
-   public Socks5Message(int cmd,String hostName,int port){
-      super(cmd,null,port);
+   public Socks5Message(int cmd, String hostName, int port) {
+      super(cmd, null, port);
       this.host = hostName;
       this.version = SOCKS_VERSION;
 
@@ -89,9 +87,9 @@ class Socks5Message extends ProxyMessage{
       data[4] = (byte) addr.length;		//Length of the address
 
       //Put Address
-      System.arraycopy(addr,0,data,5,addr.length);
+      System.arraycopy(addr, 0, data, 5, addr.length);
       //Put port
-      data[data.length-2] = (byte)(port >>8);
+      data[data.length-2] = (byte)(port >> 8);
       data[data.length-1] = (byte)(port);
    }
 
@@ -103,9 +101,9 @@ class Socks5Message extends ProxyMessage{
      if any error with protocol occurs.
      @throws IOException If any error happens with I/O.
    */
-   public Socks5Message(InputStream in) throws SocksException,
-                                              IOException{
-      this(in,true);
+   public Socks5Message(InputStream in)
+		   throws SocksException, IOException {
+      this(in, true);
    }
 
    /**
@@ -118,11 +116,10 @@ class Socks5Message extends ProxyMessage{
      reading in client mode, or if any error with protocol occurs.
      @throws IOException If any error happens with I/O.
    */
-   public Socks5Message(InputStream in,boolean clientMode)throws SocksException,
-                                              IOException{
-      read(in,clientMode);
+   public Socks5Message(InputStream in,boolean clientMode)
+		   throws SocksException, IOException {
+      read(in, clientMode);
    }
-
 
    /**
      Initialises Message from the stream. Reads server response from
@@ -132,9 +129,9 @@ class Socks5Message extends ProxyMessage{
      if any error with protocol occurs.
      @throws IOException If any error happens with I/O.
    */
-   public void read(InputStream in) throws SocksException,
-                                           IOException{
-       read(in,true);
+   public void read(InputStream in)
+		   throws SocksException, IOException {
+       read(in, true);
    }
 
 
@@ -148,8 +145,8 @@ class Socks5Message extends ProxyMessage{
      reading in client mode, or if any error with protocol occurs.
      @throws IOException If any error happens with I/O.
    */
-   public void read(InputStream in,boolean clientMode) throws SocksException,
-                                           IOException{
+   public void read(InputStream in, boolean clientMode)
+		   throws SocksException, IOException {
       data = null;
       ip = null;
 
@@ -165,16 +162,16 @@ class Socks5Message extends ProxyMessage{
 
       byte addr[];
 
-      switch(addrType){
+      switch(addrType) {
          case SOCKS_ATYP_IPV4:
             addr = new byte[4];
             di.readFully(addr);
-            host = bytes2IPV4(addr,0);
+            host = bytes2IPV4(addr, 0);
          break;
          case SOCKS_ATYP_IPV6:
            addr = new byte[SOCKS_IPV6_LENGTH];//I believe it is 16 bytes,huge!
            di.readFully(addr);
-           host = bytes2IPV6(addr,0);
+           host = bytes2IPV6(addr, 0);
          break;
          case SOCKS_ATYP_DOMAINNAME:
            //System.out.println("Reading ATYP_DOMAINNAME");
@@ -188,10 +185,10 @@ class Socks5Message extends ProxyMessage{
 
       port = di.readUnsignedShort();
 
-      if(addrType != SOCKS_ATYP_DOMAINNAME && doResolveIP){
-         try{
+      if(addrType != SOCKS_ATYP_DOMAINNAME && doResolveIP) {
+         try {
             ip = InetAddress.getByName(host);
-         }catch(UnknownHostException uh_ex){
+         } catch(UnknownHostException uh_ex) {
          }
       }
    }
@@ -200,22 +197,22 @@ class Socks5Message extends ProxyMessage{
     Writes the message to the stream.
     @param out Output stream to which message should be written.
    */
-   public void write(OutputStream out)throws SocksException,
-                                             IOException{
-     if(data == null){
+   public void write(OutputStream out)
+		   throws SocksException, IOException {
+     if(data == null) {
        Socks5Message msg;
 
        if(addrType == SOCKS_ATYP_DOMAINNAME)
-          msg = new Socks5Message(command,host,port);
-       else{
-          if(ip == null){
-             try{
+          msg = new Socks5Message(command, host, port);
+       else {
+          if(ip == null) {
+             try {
                ip = InetAddress.getByName(host);
-             }catch(UnknownHostException uh_ex){
+             } catch(UnknownHostException uh_ex) {
                throw new SocksException(Proxy.SOCKS_JUST_ERROR);
              }
           }
-          msg = new Socks5Message(command,ip,port);
+          msg = new Socks5Message(command, ip, port);
        }
        data = msg.data;
      }
@@ -228,23 +225,19 @@ class Socks5Message extends ProxyMessage{
     which might fail.
     @throws UnknownHostException if host can't be resolved.
    */
-   public InetAddress getInetAddress() throws UnknownHostException{
-     if(ip!=null) return ip;
+   public InetAddress getInetAddress() throws UnknownHostException {
+     if(ip != null) return ip;
 
-     return (ip=InetAddress.getByName(host));
+     return (ip = InetAddress.getByName(host));
    }
 
    /**
      Returns string representation of the message.
    */
-   public String toString(){
-      String s=
-        "Socks5Message:"+"\n"+
-        "VN   "+version+"\n"+
-        "CMD  "+command+"\n"+
-        "ATYP "+addrType+"\n"+
-        "ADDR "+host+"\n"+
-        "PORT "+port+"\n";
+   public String toString() {
+      String s= "Socks5Message:" + "\n" + "VN   " + version + "\n" +
+    		  "CMD  " + command + "\n" + "ATYP " + addrType + "\n" +
+    		  "ADDR " + host + "\n" + "PORT " + port + "\n";
       return s;
    }
             
@@ -254,7 +247,7 @@ class Socks5Message extends ProxyMessage{
     *that is wether to create InetAddress object from the
     *hostName string
     */
-   static public boolean resolveIP(){ return doResolveIP;}
+   static public boolean resolveIP() {return doResolveIP;}
 
    /**
     *Wether to resolve hostIP returned from SOCKS server
@@ -263,7 +256,7 @@ class Socks5Message extends ProxyMessage{
     *@param doResolve Wether to resolve hostIP from SOCKS server.
     *@return Previous value.
     */
-   static public boolean resolveIP(boolean doResolve){
+   static public boolean resolveIP(boolean doResolve) {
       boolean old = doResolveIP;
       doResolveIP = doResolve;
       return old;
@@ -287,5 +280,4 @@ class Socks5Message extends ProxyMessage{
    public static final int SOCKS_IPV6_LENGTH		=16;
 
    static boolean doResolveIP = true;
-
 }

@@ -3,14 +3,13 @@ package com.xbsafe.socks;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.DataInputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 /**
  Abstract class which describes SOCKS4/5 response/request.
 */
-public abstract class ProxyMessage{
+public abstract class ProxyMessage {
    /** Host as an IP address */
    public InetAddress ip=null;
    /** SOCKS version, or version of the response for SOCKS4*/
@@ -24,13 +23,13 @@ public abstract class ProxyMessage{
    /** User field for SOCKS4 request messages*/
    public String user=null;
 
-   ProxyMessage(int command,InetAddress ip,int port){
+   ProxyMessage(int command, InetAddress ip, int port) {
       this.command = command;
       this.ip      = ip;
       this.port    = port;
    }
 
-   ProxyMessage(){
+   ProxyMessage() {
    }
 
 
@@ -43,9 +42,7 @@ public abstract class ProxyMessage{
      @throws IOException If any error happens with I/O.
    */
    public abstract void read(InputStream in)
-                                    throws SocksException,
-                                           IOException;
-
+		   throws SocksException, IOException;
 
    /**
      Initialises Message from the stream. Reads server response or client 
@@ -58,22 +55,20 @@ public abstract class ProxyMessage{
      @throws IOException If any error happens with I/O.
    */
    public abstract void read(InputStream in,boolean client_mode)
-                                    throws SocksException,
-                                           IOException;
-
+		   throws SocksException, IOException;
 
    /**
     Writes the message to the stream.
     @param out Output stream to which message should be written.
    */
-   public abstract void write(OutputStream out)throws SocksException,
-                                             IOException;
+   public abstract void write(OutputStream out)
+		   throws SocksException, IOException;
 
    /**
     Get the Address field of this message as InetAddress object.
     @return Host address or null, if one can't be determined.
    */
-   public InetAddress getInetAddress() throws UnknownHostException{
+   public InetAddress getInetAddress() throws UnknownHostException {
      return ip;
    }
 
@@ -82,27 +77,24 @@ public abstract class ProxyMessage{
     Get string representaion of this message.
     @return string representation of this message.
    */
-   public String toString(){
-      return 
-      "Proxy Message:\n"+
-      "Version:"+ version+"\n"+
-      "Command:"+ command+"\n"+
-      "IP:     "+ ip+"\n"+
-      "Port:   "+ port+"\n"+
-      "User:   "+ user+"\n" ;
+   public String toString() {
+      return "Proxy Message:\n" + "Version:" + version + "\n"
+    		  + "Command:" + command + "\n" + "IP:     " + ip
+    		  + "\n" + "Port:   " + port + "\n" + "User:   "
+    		  + user + "\n" ;
    }
 
-//Package methods
-//////////////////
+   //Package methods
+   //////////////////
 
-   static final String bytes2IPV4(byte[] addr,int offset){
-      String hostName = ""+(addr[offset] & 0xFF);
-      for(int i = offset+1;i<offset+4;++i)
-        hostName+="."+(addr[i] & 0xFF);
+   static final String bytes2IPV4(byte[] addr, int offset) {
+      String hostName = "" + (addr[offset] & 0xFF);
+      for(int i=offset+1; i<offset+4; ++i)
+        hostName += "." + (addr[i] & 0xFF);
       return hostName;
    }
 
-   static final String bytes2IPV6(byte[] addr,int offset){
+   static final String bytes2IPV6(byte[] addr, int offset) {
      //Have no idea how they look like!
      return null;
    }
