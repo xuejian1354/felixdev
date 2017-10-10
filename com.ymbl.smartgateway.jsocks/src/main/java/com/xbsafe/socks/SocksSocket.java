@@ -136,7 +136,7 @@ public class SocksSocket extends Socket {
       if(proxy.isDirect(remoteIP))
         doDirect();
       else
-        processReply(proxy.connect(ip,port));
+        processReply(proxy.connect(ip, port));
    }
 
    /**

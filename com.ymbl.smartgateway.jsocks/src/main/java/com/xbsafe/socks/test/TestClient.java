@@ -157,7 +157,7 @@ public class TestClient extends TestService {
       ss.close();
    }
 
-   void open(int service,boolean useString) throws IOException {
+   void open(int service, boolean useString) throws IOException {
 
       if(!useString) {
          s = new SocksSocket(proxy, InetAddress.getByName(testHost), servicePorts[service]);
@@ -222,12 +222,12 @@ public class TestClient extends TestService {
          return;
       }
 
-      if(directHosts != null) addDirectHosts(p,directHosts);
+      if(directHosts != null) addDirectHosts(p, directHosts);
 
       if(p instanceof Socks5Proxy)
          ((Socks5Proxy) p).resolveAddrLocally(false);
 
-      TestClient tc = new TestClient(p,testHost);
+      TestClient tc = new TestClient(p, testHost);
       tc.start();
    }
 }

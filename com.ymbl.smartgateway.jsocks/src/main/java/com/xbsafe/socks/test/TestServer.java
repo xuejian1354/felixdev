@@ -40,11 +40,11 @@ public class TestServer implements Runnable {
     It is being done in separate thread.
     @return Never returns.
   */
-  static public void server(int service) throws IOException {
+  public void server(int service) throws IOException {
      ServerSocket ss = new ServerSocket(TestService.servicePorts[service]);
      Socket s = ss.accept();
      while(s != null) {
-	   TestService st = new TestService(s,service);
+	   TestService st = new TestService(s, service);
 	   Thread t = new Thread(st);
 	   t.start();
 	   s = ss.accept();

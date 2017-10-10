@@ -27,8 +27,8 @@ public class UPSOCKS implements UserValidation {
           user = args[0];
           password = args[1];
         } else {
-          user = "user";
-          password = "password";
+          user = "admin";
+          password = "123456";
         }
 
         UPSOCKS us = new UPSOCKS(user, password);

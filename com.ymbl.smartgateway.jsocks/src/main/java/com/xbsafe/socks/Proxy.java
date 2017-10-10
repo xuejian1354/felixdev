@@ -267,15 +267,15 @@ public abstract class Proxy {
 
       try {
          if(proxy_user == null)
-           proxy = new Socks5Proxy(proxy_host,proxy_port);
+           proxy = new Socks5Proxy(proxy_host, proxy_port);
          else if(proxy_password == null)
-           proxy = new Socks4Proxy(proxy_host,proxy_port,proxy_user);
-         else{
-           proxy = new Socks5Proxy(proxy_host,proxy_port);
+           proxy = new Socks4Proxy(proxy_host, proxy_port, proxy_user);
+         else {
+           proxy = new Socks5Proxy(proxy_host, proxy_port);
            UserPasswordAuthentication upa = 
         		   new UserPasswordAuthentication(proxy_user, proxy_password);
 
-           ((Socks5Proxy)proxy).setAuthenticationMethod(upa.METHOD_ID, upa);
+           ((Socks5Proxy)proxy).setAuthenticationMethod(UserPasswordAuthentication.METHOD_ID, upa);
          }
       } catch(UnknownHostException uhe) {
          return null;

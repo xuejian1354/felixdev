@@ -1,6 +1,5 @@
 package com.ymbl.smartgateway.jsocks;
 
-import com.xbsafe.socks.*;
 import com.xbsafe.socks.server.*;
 import java.net.Socket;
 
@@ -18,24 +17,5 @@ public class SocksValidation implements UserValidation {
        System.err.println("User:" + user + "\tPassword:" + password);
        System.err.println("Socket:" + s);
        return (user.equals(this.user) && password.equals(this.password));
-    }
-
-    public static void main(String args[]) {
-        String user, password;
-
-        if(args.length == 2) {
-          user = args[0];
-          password = args[1];
-        } else {
-          user = "user";
-          password = "password";
-        }
-
-        SocksValidation us = new SocksValidation(user, password);
-        UserPasswordAuthenticator auth = new UserPasswordAuthenticator(us);
-        ProxyServer server = new ProxyServer(auth);
-
-        server.setLog(System.out);
-        server.start(1080);
     }
 }

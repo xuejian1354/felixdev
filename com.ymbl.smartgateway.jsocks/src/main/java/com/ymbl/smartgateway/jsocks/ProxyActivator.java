@@ -23,11 +23,14 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import com.xbsafe.socks.ProxyServer;
+import com.xbsafe.socks.server.ServerAuthenticator;
+import com.xbsafe.socks.server.ServerAuthenticatorNone;
 import com.xbsafe.socks.server.UserPasswordAuthenticator;
 import com.ymbl.smartgateway.jsocks.log.SystemLogger;
 
 public class ProxyActivator extends AbstractActivator implements Runnable {
 
+	private boolean authentication;
 	private String user, password;
 
 	protected void doStart() throws Exception {
@@ -39,22 +42,33 @@ public class ProxyActivator extends AbstractActivator implements Runnable {
 		SystemLogger.info("Plug for Jsocks Engine stop ...");
 	}
 
-	@SuppressWarnings("static-access")
 	public void run() {
+		authentication = false;
 		user = "admin";
 		password = "123456";
 
+		ServerAuthenticator auth = new ServerAuthenticatorNone();
+
 		try {
 			ResourceBundle resource = ResourceBundle.getBundle("config");
-			user = resource.getString("user");
-			password = resource.getString("password");
+			if(resource.getString("authentication").equals("true")) {
+				authentication = true;
+				user = resource.getString("user");
+				password = resource.getString("password");
+			}
 		} catch (MissingResourceException e) {}
 
-		SocksValidation sv = new SocksValidation(user, password);
-		UserPasswordAuthenticator auth = new UserPasswordAuthenticator(sv);
-		ProxyServer server = new ProxyServer(auth);
+		if(authentication) {
+			SocksValidation sv = new SocksValidation(user, password);
+			auth = new UserPasswordAuthenticator(sv);
+			SystemLogger.info("Authentication === user: " + user + "    password: " + password);
+		}
+		else {
+			SystemLogger.info("No authentication");
+		}
 
-		server.setLog(System.out);
+		ProxyServer server = new ProxyServer(auth);
+		ProxyServer.setLog(System.out);
         server.start(1080);
 	}
 }
