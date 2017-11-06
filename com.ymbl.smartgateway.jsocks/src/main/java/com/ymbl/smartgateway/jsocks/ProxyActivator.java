@@ -19,6 +19,9 @@
 
 package com.ymbl.smartgateway.jsocks;
 
+import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -30,6 +33,8 @@ import com.ymbl.smartgateway.jsocks.log.SystemLogger;
 
 public class ProxyActivator extends AbstractActivator implements Runnable {
 
+	private String serverAddr;
+	int serverPort;
 	private boolean authentication;
 	private String user, password;
 
@@ -51,6 +56,11 @@ public class ProxyActivator extends AbstractActivator implements Runnable {
 
 		try {
 			ResourceBundle resource = ResourceBundle.getBundle("config");
+			serverAddr = resource.getString("server");
+			serverPort = Integer.parseInt(resource.getString("port"));
+
+			SystemLogger.info("Connection: server = " + serverAddr + ", port = " + serverPort);
+
 			if(resource.getString("authentication").equals("true")) {
 				authentication = true;
 				user = resource.getString("user");
@@ -67,8 +77,18 @@ public class ProxyActivator extends AbstractActivator implements Runnable {
 			SystemLogger.info("No authentication");
 		}
 
-		ProxyServer server = new ProxyServer(auth);
-		ProxyServer.setLog(System.out);
-        server.start(1080);
+		try {
+			ProxyServer.setLog(System.out);
+			ProxyServer.ProxyServerAsClient(auth, new Socket(serverAddr, serverPort));
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		//ProxyServer server = new ProxyServer(auth);
+		//server.start(1080);
 	}
 }

@@ -65,6 +65,12 @@ public class ProxyServer implements Runnable {
       mode = START_MODE;
    }
 
+   public static ProxyServer ProxyServerAsClient(ServerAuthenticator auth, Socket s) {
+	   ProxyServer ps = new ProxyServer(auth, s);
+       (new Thread(ps)).start();
+       return ps;
+   }
+
    //Public methods
    /////////////////
 
