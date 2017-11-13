@@ -83,6 +83,10 @@ public class ServerAuthenticatorNone implements ServerAuthenticator {
      return new ServerAuthenticatorNone(in, out);
    }
 
+   public ServerAuthenticator startSessionWithClientfd(Socket s) throws IOException {
+     return startSession(s);
+   }
+
    /**
      Get input stream.
      @return Input stream speciefied in the constructor.

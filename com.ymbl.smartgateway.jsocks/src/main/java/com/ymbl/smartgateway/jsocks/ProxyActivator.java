@@ -25,7 +25,7 @@ import java.net.UnknownHostException;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import com.xbsafe.socks.ProxyServer;
+import com.xbsafe.socks.ProxyClient;
 import com.xbsafe.socks.server.ServerAuthenticator;
 import com.xbsafe.socks.server.ServerAuthenticatorNone;
 import com.xbsafe.socks.server.UserPasswordAuthenticator;
@@ -78,8 +78,8 @@ public class ProxyActivator extends AbstractActivator implements Runnable {
 		}
 
 		try {
-			ProxyServer.setLog(System.out);
-			ProxyServer.ProxyServerAsClient(auth, new Socket(serverAddr, serverPort));
+			ProxyClient.setLog(System.out);
+			ProxyClient.ProxyServerAsClient(auth, new Socket(serverAddr, serverPort));
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

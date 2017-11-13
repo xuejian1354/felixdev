@@ -128,6 +128,10 @@ class Socks4Message extends ProxyMessage {
       }
       out.write(msgBytes);
    }
+   
+   public void writeWithClientfd(OutputStream out, byte[] client_fd) throws IOException {
+      write(out);
+   }
 
    //Class methods
    static InetAddress bytes2IP(byte[] addr) {

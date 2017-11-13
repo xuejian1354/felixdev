@@ -64,6 +64,9 @@ public abstract class ProxyMessage {
    public abstract void write(OutputStream out)
 		   throws SocksException, IOException;
 
+   public abstract void writeWithClientfd(OutputStream out, byte[] client_fd)
+		   throws SocksException, IOException;
+
    /**
     Get the Address field of this message as InetAddress object.
     @return Host address or null, if one can't be determined.

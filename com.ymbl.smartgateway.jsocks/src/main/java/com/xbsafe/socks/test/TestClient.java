@@ -25,12 +25,12 @@ public class TestClient extends TestService {
 
    public void start() {
       connectTests(true);
-      acceptTests(true);
-      udpTests(true);
+      //acceptTests(true);
+      //udpTests(true);
 
-      connectTests(false);
-      acceptTests(false);
-      udpTests(false);
+      //connectTests(false);
+      //acceptTests(false);
+      //udpTests(false);
    }
 
    void connectTests(boolean useString) {

@@ -219,6 +219,33 @@ class Socks5Message extends ProxyMessage {
      out.write(data);
    }
 
+   public void writeWithClientfd(OutputStream out, byte[] client_fd)
+		   throws SocksException, IOException {
+     if(data == null) {
+       Socks5Message msg;
+
+       if(addrType == SOCKS_ATYP_DOMAINNAME)
+          msg = new Socks5Message(command, host, port);
+       else {
+          if(ip == null) {
+             try {
+               ip = InetAddress.getByName(host);
+             } catch(UnknownHostException uh_ex) {
+               throw new SocksException(Proxy.SOCKS_JUST_ERROR);
+             }
+          }
+          msg = new Socks5Message(command, ip, port);
+       }
+       data = msg.data;
+     }
+
+     byte[] response = new byte[data.length+4];
+     System.arraycopy(client_fd, 0, response, 0, client_fd.length);
+     System.arraycopy(data, 0, response, client_fd.length, data.length);
+
+     out.write(response);
+   }
+
    /**
     Returns IP field of the message as IP, if the message was created
     with ATYP of HOSTNAME, it will attempt to resolve the hostname,

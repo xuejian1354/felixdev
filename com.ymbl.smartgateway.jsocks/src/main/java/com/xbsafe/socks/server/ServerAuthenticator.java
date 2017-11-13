@@ -36,6 +36,8 @@ public interface ServerAuthenticator {
    */
    ServerAuthenticator startSession(Socket s) throws IOException;
 
+   ServerAuthenticator startSessionWithClientfd(Socket s) throws IOException;
+
    /**
     This method should return input stream which should be used on the
     accepted socket.
