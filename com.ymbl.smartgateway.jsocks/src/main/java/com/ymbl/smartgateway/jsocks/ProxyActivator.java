@@ -26,17 +26,12 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import com.xbsafe.socks.ProxyClient;
-import com.xbsafe.socks.server.ServerAuthenticator;
-import com.xbsafe.socks.server.ServerAuthenticatorNone;
-import com.xbsafe.socks.server.UserPasswordAuthenticator;
 import com.ymbl.smartgateway.jsocks.log.SystemLogger;
 
 public class ProxyActivator extends AbstractActivator implements Runnable {
 
 	private String serverAddr;
 	int serverPort;
-	private boolean authentication;
-	private String user, password;
 
 	protected void doStart() throws Exception {
 		SystemLogger.info("Plug for Jsocks Engine start ...");
@@ -48,12 +43,6 @@ public class ProxyActivator extends AbstractActivator implements Runnable {
 	}
 
 	public void run() {
-		authentication = false;
-		user = "admin";
-		password = "123456";
-
-		ServerAuthenticator auth = new ServerAuthenticatorNone();
-
 		try {
 			ResourceBundle resource = ResourceBundle.getBundle("config");
 			serverAddr = resource.getString("server");
@@ -61,34 +50,15 @@ public class ProxyActivator extends AbstractActivator implements Runnable {
 
 			SystemLogger.info("Connection: server = " + serverAddr + ", port = " + serverPort);
 
-			if(resource.getString("authentication").equals("true")) {
-				authentication = true;
-				user = resource.getString("user");
-				password = resource.getString("password");
-			}
-		} catch (MissingResourceException e) {}
-
-		if(authentication) {
-			SocksValidation sv = new SocksValidation(user, password);
-			auth = new UserPasswordAuthenticator(sv);
-			SystemLogger.info("Authentication === user: " + user + "    password: " + password);
-		}
-		else {
-			SystemLogger.info("No authentication");
-		}
-
-		try {
 			ProxyClient.setLog(System.out);
-			ProxyClient.ProxyServerAsClient(auth, new Socket(serverAddr, serverPort));
+			ProxyClient.ProxyServerAsClient(new Socket(serverAddr, serverPort));
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (MissingResourceException e) {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		//ProxyServer server = new ProxyServer(auth);
-		//server.start(1080);
 	}
 }

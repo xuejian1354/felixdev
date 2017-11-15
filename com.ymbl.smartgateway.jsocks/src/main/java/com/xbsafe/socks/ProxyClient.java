@@ -1,7 +1,5 @@
 package com.xbsafe.socks;
 
-import com.xbsafe.socks.server.ServerAuthenticator;
-
 import java.net.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +10,6 @@ public class ProxyClient implements Runnable {
    public final static String NGX_GWPROXY_CONNECTION_NEW_PRE = "JFLS#%^Fs&XK*HJGTT&$#@!S$L:ZXRLC";
    public final static String NGX_GWPROXY_CONNECTION_NEW_SUF = "NBID*^4>BC{j&t#5PK!FLSi7^9HCBO%U";
 
-   ServerAuthenticator auth;
    ProxyMessage msg = null;
 
    Socket sock = null;
@@ -35,13 +32,12 @@ public class ProxyClient implements Runnable {
 
    //Constructors
    ////////////////////
-   private ProxyClient(ServerAuthenticator auth, Socket s) {
-      this.auth  = auth;
+   private ProxyClient(Socket s) {
       this.sock  = s;
    }
 
-   public static ProxyClient ProxyServerAsClient(ServerAuthenticator auth, Socket s) {
-	   ProxyClient pc = new ProxyClient(auth, s);
+   public static ProxyClient ProxyServerAsClient(Socket s) {
+	   ProxyClient pc = new ProxyClient(s);
        (new Thread(pc)).start();
        return pc;
    }
@@ -117,7 +113,6 @@ public class ProxyClient implements Runnable {
 	       streamLoop = false;
 	       log("Aborting operation");
 	       if(sock != null) sock.close();
-	       if(auth != null) auth.endSession();
 	       log("Main thread(client->remote)stopped.");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -132,11 +127,6 @@ public class ProxyClient implements Runnable {
 	   try {
 		  PushbackInputStream push_in;
 		  ProxyMessage msg;
-
-		  if(auth.startSessionWithClientfd(sock) == null) { //Authentication failed
-		    log("Authentication failed");
-		    return;
-	      }
 
 		  in.read(tfd, 0, 4);
 
@@ -155,9 +145,6 @@ public class ProxyClient implements Runnable {
 	      } else {
 	        throw new SocksException(Proxy.SOCKS_FAILURE);
 	      }
-
-	      if(!auth.checkRequest(msg))
-	    	  throw new SocksException(Proxy.SOCKS_FAILURE);
 
 	      if(msg.ip == null) {
 	        if(msg instanceof Socks5Message) {
