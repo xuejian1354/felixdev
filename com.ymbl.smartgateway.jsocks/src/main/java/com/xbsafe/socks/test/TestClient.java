@@ -23,8 +23,12 @@ public class TestClient extends TestService {
       if(log == null) log = System.out;
    }
 
+   public void start(int nums) {
+	   connectTests(true, nums); 
+   }
+
    public void start() {
-      connectTests(true);
+      connectTests(true, 5);
       //acceptTests(true);
       //udpTests(true);
 
@@ -33,14 +37,20 @@ public class TestClient extends TestService {
       //udpTests(false);
    }
 
-   void connectTests(boolean useString) {
+   void connectTests(boolean useString, int nums) {
       try {
-         open(ECHO, useString);
-         testEcho();
-         s.close();
+    	 log("Testing discard");
+         for(int i=0; i<nums; ++i) {
+           open(DISCARD, useString);
+           /*log("Sending discard message:" + i);
+           out.write("Discard message:" + i + "\r\n");
+           out.flush();*/
+           s.close();
+         }
+         log("Discard finished");
 
-         open(DISCARD, useString);
-         testDiscard();
+         /*open(ECHO, useString);
+         testEcho();
          s.close();
 
          open(CHARGEN, useString);
@@ -55,7 +65,7 @@ public class TestClient extends TestService {
             }
          }
 
-         s.close();
+         s.close();*/
 
       } catch(IOException ioe) {
          ioe.printStackTrace();
@@ -227,7 +237,20 @@ public class TestClient extends TestService {
       if(p instanceof Socks5Proxy)
          ((Socks5Proxy) p).resolveAddrLocally(false);
 
+      int i = 0;
+      int nums = 5;
+      java.util.StringTokenizer st = new java.util.StringTokenizer(argv[1], ":");
+      while(st.hasMoreElements()) {
+         i++;
+         String entry = st.nextToken();
+         if(i>4) {
+        	 nums = Integer.parseInt(entry);
+        	 nums = nums<1?1:nums;
+        	 break;
+         }
+      }
+
       TestClient tc = new TestClient(p, testHost);
-      tc.start();
+      tc.start(nums);
    }
 }
