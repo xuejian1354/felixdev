@@ -42,14 +42,14 @@ public class TestClient extends TestService {
     	 log("Testing discard");
          for(int i=0; i<nums; ++i) {
            open(DISCARD, useString);
-           /*log("Sending discard message:" + i);
+           log("Sending discard message:" + i);
            out.write("Discard message:" + i + "\r\n");
-           out.flush();*/
+           out.flush();
            s.close();
          }
          log("Discard finished");
 
-         /*open(ECHO, useString);
+         open(ECHO, useString);
          testEcho();
          s.close();
 
@@ -65,7 +65,7 @@ public class TestClient extends TestService {
             }
          }
 
-         s.close();*/
+         s.close();
 
       } catch(IOException ioe) {
          ioe.printStackTrace();

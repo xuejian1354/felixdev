@@ -129,7 +129,7 @@ class Socks4Message extends ProxyMessage {
       out.write(msgBytes);
    }
    
-   public void writeWithClientfd(OutputStream out, byte[] client_fd) throws IOException {
+   public void writeWithClientfd(OutputStream out, int client_fd) throws IOException {
       write(out);
    }
 

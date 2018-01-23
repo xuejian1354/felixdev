@@ -120,6 +120,51 @@ class Socks5Message extends ProxyMessage {
 		   throws SocksException, IOException {
       read(in, clientMode);
    }
+   
+   public Socks5Message(byte[] b, int off, int len) {
+	  data = null;
+      ip = null;
+      int ipos = 0;
+
+      version = b[off];
+      command = b[off+1];
+
+      int reserved = b[off+2];
+      addrType = b[off+3];
+
+      byte addr[];
+
+      switch(addrType) {
+         case SOCKS_ATYP_IPV4:
+            addr = new byte[4];
+            System.arraycopy(b, off+4, addr, 0, 4);
+            host = bytes2IPV4(addr, 0);
+            ipos = off + 4 + 4;
+         break;
+         case SOCKS_ATYP_IPV6:
+           addr = new byte[SOCKS_IPV6_LENGTH];//I believe it is 16 bytes,huge!
+           System.arraycopy(b, off+4, addr, 0, SOCKS_IPV6_LENGTH);
+           host = bytes2IPV6(addr, 0);
+           ipos = off + 4 + SOCKS_IPV6_LENGTH;
+         break;
+         case SOCKS_ATYP_DOMAINNAME:
+           //System.out.println("Reading ATYP_DOMAINNAME");
+           addr = new byte[b[off+4]];//Next byte shows the length
+           System.arraycopy(b, off+5, addr, 0, b[off+4]);
+           host = new String(addr);
+           ipos = off + 5 + b[off+4];
+         break;
+         default:
+            return;
+      }
+
+      port = ((b[ipos]<<8) | b[ipos+1] & 0xff);
+
+      try {
+        ip = InetAddress.getByName(host);
+      } catch(UnknownHostException uh_ex) {
+      }
+   }
 
    /**
      Initialises Message from the stream. Reads server response from
@@ -219,7 +264,7 @@ class Socks5Message extends ProxyMessage {
      out.write(data);
    }
 
-   public void writeWithClientfd(OutputStream out, byte[] client_fd)
+   public void writeWithClientfd(OutputStream out, int client_fd)
 		   throws SocksException, IOException {
      if(data == null) {
        Socks5Message msg;
@@ -239,9 +284,18 @@ class Socks5Message extends ProxyMessage {
        data = msg.data;
      }
 
-     byte[] response = new byte[data.length+4];
-     System.arraycopy(client_fd, 0, response, 0, client_fd.length);
-     System.arraycopy(data, 0, response, client_fd.length, data.length);
+     int reslen = data.length+8;
+     byte[] response = new byte[reslen];
+     
+     response[0] = (byte)((reslen >> 24) & 0xFF);
+     response[1] = (byte)((reslen >> 16) & 0xFF);
+     response[2] = (byte)((reslen >> 8) & 0xFF);
+     response[3] = (byte)((reslen) & 0xFF);
+     response[4] = (byte)((client_fd >> 24) & 0xFF);
+     response[5] = (byte)((client_fd >> 16) & 0xFF);
+     response[6] = (byte)((client_fd >> 8) & 0xFF);
+     response[7] = (byte)((client_fd) & 0xFF);
+     System.arraycopy(data, 0, response, 8, data.length);
 
      out.write(response);
    }

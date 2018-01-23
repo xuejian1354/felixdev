@@ -64,7 +64,7 @@ public abstract class ProxyMessage {
    public abstract void write(OutputStream out)
 		   throws SocksException, IOException;
 
-   public abstract void writeWithClientfd(OutputStream out, byte[] client_fd)
+   public abstract void writeWithClientfd(OutputStream out, int client_fd)
 		   throws SocksException, IOException;
 
    /**

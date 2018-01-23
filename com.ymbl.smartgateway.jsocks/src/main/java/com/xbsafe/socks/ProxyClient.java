@@ -27,7 +27,6 @@ public class ProxyClient implements Runnable {
    static PrintStream log = null;
    static Proxy proxy;
 
-   byte[] tfd = new  byte[4];
    Map<Integer, GwproxyLink> client_links = new HashMap<Integer, GwproxyLink>();
 
    //Constructors
@@ -77,32 +76,59 @@ public class ProxyClient implements Runnable {
 
 		 while(streamLoop) {
     		 len = in.read(buf);
-    		 if(len < 4) {
+    		 if(len < 8) {
     			 continue;
     		 }
     		 else {
-    			 byte[] tcli_fd = new byte[4];
-    			 System.arraycopy(buf, 0, tcli_fd, 0, 4);
+				 int ipos = 0;
+				 while(ipos < len-8) {
+					 int datalen = buf[ipos]*(2^24) + buf[ipos+1]*(2^16) + buf[ipos+2]*(2^8) + buf[ipos+3];
+					 int fd = buf[ipos+4]*(2^24) + buf[ipos+5]*(2^16) + buf[ipos+6]*(2^8) + buf[ipos+7];
 
-				 int fd = tcli_fd[0]*(2^24) + tcli_fd[1]*(2^16) + tcli_fd[2]*(2^8) + tcli_fd[3];
+					 if(datalen <= 8 && ipos+datalen > len) {
+						 ipos += datalen;
+						 continue;
+					 }
 
-    			 if(len == 36) {
-        			 byte[] stream_data = new byte[len-4];
-        			 System.arraycopy(buf, 4, stream_data, 0, len-4);
-    				 if(NGX_GWPROXY_CONNECTION_NEW_PRE.equals(new String(stream_data))) {
-        				 startSession(fd);
-        				 continue;
-        			 }
-        			 else if(NGX_GWPROXY_CONNECTION_NEW_SUF.equals(new String(stream_data))) {
-        				 endSession(fd);
-        				 continue;
-        			 }
-    			 }
+					 GwproxyLink gLink = client_links.get(fd);
 
-    			 GwproxyLink gLink = client_links.get(fd);
-    			 if(gLink != null) {
-    				 gLink.getOutputstream().write(buf, 4, len-4);
-    			 }
+	    			 if(datalen == 40) {
+	        			 byte[] stream_data = new byte[32];
+	        			 System.arraycopy(buf, ipos+8, stream_data, 0, 32);
+	    				 if(NGX_GWPROXY_CONNECTION_NEW_PRE.equals(new String(stream_data))) {
+	    					 gLink = new GwproxyLink(fd);
+	    					 client_links.put(fd, gLink);
+	    					 ipos += datalen;
+	    					 continue;
+	        			 }
+	        			 else if(NGX_GWPROXY_CONNECTION_NEW_SUF.equals(new String(stream_data))) {
+	        				 if(gLink != null) {
+	        					 gLink.stat = GwproxyLink.GWLINK_RELEASE;
+	        					 client_links.remove(fd);
+	        				 }
+	        			 }
+	    			 }
+
+	    			 if(gLink != null) {
+	    				switch (gLink.stat) {
+						case GwproxyLink.GWLINK_INIT:
+							if(!gLink.startSession(buf, ipos+8, datalen-8)) {
+								client_links.remove(fd);
+							}
+							break;
+
+						case GwproxyLink.GWLINK_CONNECT:
+							gLink.send(buf, ipos+8, datalen-8);
+							break;
+
+						case GwproxyLink.GWLINK_RELEASE:
+							gLink.endSession();
+							break;
+						}
+	    			 }
+
+	    			 ipos += datalen;
+				 }
     		 }
 		 }
      } catch(IOException ioe) {
@@ -120,107 +146,6 @@ public class ProxyClient implements Runnable {
 		}
      }
    }
-
-   //Private methods
-   /////////////////
-   private void startSession(final int fd) {
-	   try {
-		  PushbackInputStream push_in;
-		  ProxyMessage msg;
-
-		  in.read(tfd, 0, 4);
-
-	      if(in instanceof PushbackInputStream)
-	         push_in = (PushbackInputStream) in;
-	      else
-	         push_in = new PushbackInputStream(in);
-
-	      int version = push_in.read();
-	      push_in.unread(version);
-
-	      if(version == 5) {
-	        msg = new Socks5Message(push_in, false);
-	      } else if(version == 4) {
-	        msg = new Socks4Message(push_in, false);
-	      } else {
-	        throw new SocksException(Proxy.SOCKS_FAILURE);
-	      }
-
-	      if(msg.ip == null) {
-	        if(msg instanceof Socks5Message) {
-	          msg.ip = InetAddress.getByName(msg.host);
-	        } else
-	          throw new SocksException(Proxy.SOCKS_FAILURE);
-	      }
-	      log(msg);
-
-	      switch(msg.command) {
-	        case Proxy.SOCKS_CMD_CONNECT:
-	            Socket s;
-	            ProxyMessage response = null;
-
-	            if(proxy == null)
-	               s = new Socket(msg.ip, msg.port);
-	            else
-	               s = new SocksSocket(proxy, msg.ip, msg.port);
-
-	            log("Connected to " + s.getInetAddress() + ":" + s.getPort());
-
-	            if(msg instanceof Socks5Message) {
-	              response = new Socks5Message(Proxy.SOCKS_SUCCESS,
-	                                               s.getLocalAddress(),
-	                                               s.getLocalPort());
-	            } else {
-	              response = new Socks4Message(Socks4Message.REPLY_OK,
-	                                           s.getLocalAddress(),
-	                                           s.getLocalPort());
-	            }
-	            response.writeWithClientfd(out, tfd);
-
-	            client_links.put(fd, new GwproxyLink(s, new Thread(){
-	            	@Override
-	            	public void run() {
-	            		// TODO Auto-generated method stub
-	            		int len;
-	           		 	byte[] buf = new byte[BUF_SIZE];
-	           		 	System.arraycopy(tfd, 0, buf, 0, 4);
-
-	        			try {
-		            		GwproxyLink gLink = client_links.get(fd);
-							InputStream gin = gLink.getInputStream();
-		            		while(gLink.getLoop()) {
-		            			len = gin.read(buf, 4, BUF_SIZE-4);
-		            			out.write(buf, 0, len+4);
-		            		}
-						} catch (SocketException e) {
-							// TODO Auto-generated catch block
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-	            	}
-	            }));
-	     	    System.out.println("new connection, fd=" + fd);
-	        break;
-
-	        default:
-	          throw new SocksException(Proxy.SOCKS_CMD_NOT_SUPPORTED);
-	      }
-	   } catch (IOException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	   }
-   }
-
-   private void endSession(int fd) throws IOException {
-	   GwproxyLink gLink = client_links.get(fd);
-	   if(gLink != null) {
-		   gLink.ReleaseLink();
-	   }
-	   client_links.remove(fd);
-	   System.out.println("connection remove, fd=" + fd);
-   }
-
 
    private void handleException(IOException ioe) {
       //If we couldn't read the request, return;
@@ -277,38 +202,120 @@ public class ProxyClient implements Runnable {
       if(cmd > 0 && cmd < 4) return command_names[cmd-1];
       else return "Unknown Command " + cmd;
    }
-   
-   class GwproxyLink {
-	   boolean loop;
-	   Socket sock;
+
+
+   class GwproxyLink implements Runnable{
+	   public final static int GWLINK_INIT = 0;
+	   public final static int GWLINK_CONNECT = 1;
+	   public final static int GWLINK_RELEASE = 2;
+
+	   public int stat = GWLINK_INIT;
+	   int key;
+	   Socket sock = null;
+	   boolean loop = true;
 	   Thread thread;
 
-	   public GwproxyLink(Socket s, Thread t) {
-		 // TODO Auto-generated constructor stub
-		 sock = s;
-		 thread = t;
-		 loop = true;
-		 if (thread != null) {
-			thread.start();
-		 }
+	   public GwproxyLink(int fd) {
+		   key = fd;
 	   }
 
-	   public boolean getLoop() {
-		   return loop;
+	   public boolean startSession(byte[] b, int off, int len) throws IOException {
+		   if(len < 8) {
+			   return false;
+		   }
+
+		   int version = b[off];
+		   if(version == 5) {
+			   msg = new Socks5Message(b, off, len);
+		   }
+		   else {
+			return false;
+		   }
+
+		   log(msg);
+
+		   switch(msg.command) {
+		   case Proxy.SOCKS_CMD_CONNECT:
+			   Socket s;
+			   ProxyMessage response = null;
+
+			   if(proxy == null)
+				   s = new Socket(msg.ip, msg.port);
+			   else
+				   s = new SocksSocket(proxy, msg.ip, msg.port);
+
+			   sock = s;
+			   log("Connected to " + s.getInetAddress() + ":" + s.getPort());
+
+			   if(msg instanceof Socks5Message) {
+				   response = new Socks5Message(Proxy.SOCKS_SUCCESS,
+						   							s.getLocalAddress(),
+						   							s.getLocalPort());
+			   } else {
+				   response = new Socks4Message(Socks4Message.REPLY_OK,
+						   						s.getLocalAddress(),
+						   						s.getLocalPort());
+			   }
+
+			   response.writeWithClientfd(out, key);
+			   System.out.println("new connection, fd=" + key);
+			   stat = GWLINK_CONNECT;
+
+			   if(sock != null) {
+				   thread = new Thread(this);
+				   thread.start();
+			   }
+	        break;
+	      }
+		  return true;
 	   }
 
-	   public OutputStream getOutputstream() throws IOException {
-		   return sock.getOutputStream();
-	   }
-
-	   public InputStream getInputStream() throws IOException {
-		   return sock.getInputStream();
-	   }
-
-	   public void ReleaseLink() throws IOException {
+	   public void endSession() throws IOException {
 		   loop = false;
-		   sock.close();
-		   thread.interrupt();
+		   if(sock != null) {
+			   sock.close();
+		   }
+		   if(thread != null) {
+			   thread.interrupt();
+		   }
+		   System.out.println("connection remove, fd=" + key);
+	   }
+
+	   public void send(byte[] b, int off, int len) throws IOException {
+		   if(sock != null) {
+			   sock.getOutputStream().write(b, off, len);
+		   }
+	   }
+
+	   public void run() {
+		   try {
+			   int len;
+			   byte[] buf = new byte[BUF_SIZE];
+
+			   while(loop) {
+				   if(sock != null) {
+					   len = sock.getInputStream().read(buf, 8, BUF_SIZE-8);
+					   int reslen = len + 8;
+					   buf[0] = (byte)((reslen >> 24) & 0xFF);
+					   buf[1] = (byte)((reslen >> 16) & 0xFF);
+					   buf[2] = (byte)((reslen >> 8) & 0xFF);
+					   buf[3] = (byte)((reslen) & 0xFF);
+					   buf[4] = (byte)((key >> 24) & 0xFF);
+					   buf[5] = (byte)((key >> 16) & 0xFF);
+					   buf[6] = (byte)((key >> 8) & 0xFF);
+					   buf[7] = (byte)((key) & 0xFF);
+					   out.write(buf, 0, reslen);
+				   }
+				   else {
+					   loop = false;
+				   }
+			   }
+			} catch (SocketException e) {
+				// TODO Auto-generated catch block
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 	   }
    }
 }
