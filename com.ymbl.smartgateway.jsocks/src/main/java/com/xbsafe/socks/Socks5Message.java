@@ -163,6 +163,7 @@ class Socks5Message extends ProxyMessage {
       try {
         ip = InetAddress.getByName(host);
       } catch(UnknownHostException uh_ex) {
+    	  uh_ex.printStackTrace();
       }
    }
 
@@ -266,23 +267,6 @@ class Socks5Message extends ProxyMessage {
 
    public void writeWithClientfd(OutputStream out, int client_fd)
 		   throws SocksException, IOException {
-     if(data == null) {
-       Socks5Message msg;
-
-       if(addrType == SOCKS_ATYP_DOMAINNAME)
-          msg = new Socks5Message(command, host, port);
-       else {
-          if(ip == null) {
-             try {
-               ip = InetAddress.getByName(host);
-             } catch(UnknownHostException uh_ex) {
-               throw new SocksException(Proxy.SOCKS_JUST_ERROR);
-             }
-          }
-          msg = new Socks5Message(command, ip, port);
-       }
-       data = msg.data;
-     }
 
      int reslen = data.length+8;
      byte[] response = new byte[reslen];

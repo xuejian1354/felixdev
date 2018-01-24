@@ -32,7 +32,13 @@ public class ProxyClient implements Runnable {
    //Constructors
    ////////////////////
    private ProxyClient(Socket s) {
-      this.sock  = s;
+ 	  try {
+ 		 this.sock  = s;
+ 		 in = sock.getInputStream();
+ 		 out = sock.getOutputStream();
+	  } catch (IOException e) {
+		e.printStackTrace();
+	  }
    }
 
    public static ProxyClient ProxyServerAsClient(Socket s) {
@@ -71,8 +77,6 @@ public class ProxyClient implements Runnable {
      try {
     	 int len;
 		 byte[] buf = new byte[BUF_SIZE];
-    	 in = sock.getInputStream();
-    	 out = sock.getOutputStream();
 
 		 while(streamLoop) {
     		 len = in.read(buf);
@@ -82,13 +86,19 @@ public class ProxyClient implements Runnable {
     		 else {
 				 int ipos = 0;
 				 while(ipos < len-8) {
-					 int datalen = buf[ipos]*(2^24) + buf[ipos+1]*(2^16) + buf[ipos+2]*(2^8) + buf[ipos+3];
-					 int fd = buf[ipos+4]*(2^24) + buf[ipos+5]*(2^16) + buf[ipos+6]*(2^8) + buf[ipos+7];
+					 int datalen = (buf[ipos]&0xff)*(2^24) + (buf[ipos+1]&0xff)*(2^16) + (buf[ipos+2]&0xff)*(2^8) + (buf[ipos+3]&0xff);
+					 int fd = (buf[ipos+4]&0xff)*(2^24) + (buf[ipos+5]*0xff)*(2^16) + (buf[ipos+6]*0xff)*(2^8) + (buf[ipos+7]&0xff);
 
 					 if(datalen <= 8 && ipos+datalen > len) {
 						 ipos += datalen;
 						 continue;
 					 }
+
+					 System.out.println("===> datalen=" + datalen + ", fd=" + fd);
+					 /*for (int i = 8; i < datalen; i++) {
+						System.out.print(Integer.toHexString((buf[ipos+i]&0xff)).toUpperCase() + " ");
+					 }
+					 System.out.println();*/
 
 					 GwproxyLink gLink = client_links.get(fd);
 
@@ -96,7 +106,13 @@ public class ProxyClient implements Runnable {
 	        			 byte[] stream_data = new byte[32];
 	        			 System.arraycopy(buf, ipos+8, stream_data, 0, 32);
 	    				 if(NGX_GWPROXY_CONNECTION_NEW_PRE.equals(new String(stream_data))) {
-	    					 gLink = new GwproxyLink(fd);
+	    					 gLink = new GwproxyLink(fd){
+	    						@Override
+	    						public void SocketConnectDstFailed(int fd) {
+	    							// TODO Auto-generated method stub
+	    							client_links.remove(fd);
+	    						}
+	    					 };
 	    					 client_links.put(fd, gLink);
 	    					 ipos += datalen;
 	    					 continue;
@@ -133,17 +149,10 @@ public class ProxyClient implements Runnable {
 		 }
      } catch(IOException ioe) {
        handleException(ioe);
-       //ioe.printStackTrace();
-     } finally {
-		try {
-	       streamLoop = false;
-	       log("Aborting operation");
-	       if(sock != null) sock.close();
-	       log("Main thread(client->remote)stopped.");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+       ioe.printStackTrace();
+       streamLoop = false;
+       log("Aborting operation");
+       log("Main thread(client->remote)stopped.");
      }
    }
 
@@ -204,22 +213,32 @@ public class ProxyClient implements Runnable {
    }
 
 
-   class GwproxyLink implements Runnable{
+   abstract class GwproxyLink {
 	   public final static int GWLINK_INIT = 0;
 	   public final static int GWLINK_CONNECT = 1;
 	   public final static int GWLINK_RELEASE = 2;
 
 	   public int stat = GWLINK_INIT;
 	   int key;
-	   Socket sock = null;
+	   Socket msock = null;
+	   boolean tryConn = true;
 	   boolean loop = true;
+	   byte[] tmpbuf = new byte[0];
 	   Thread thread;
 
 	   public GwproxyLink(int fd) {
 		   key = fd;
 	   }
 
-	   public boolean startSession(byte[] b, int off, int len) throws IOException {
+	   synchronized public boolean startSession(byte[] b, int off, int len) {
+		   if(!tryConn) {
+			   byte[] tbuf = new byte[tmpbuf.length+len];
+			   System.arraycopy(tmpbuf, 0, tbuf, 0, tmpbuf.length);
+			   System.arraycopy(b, off, tbuf, tmpbuf.length, len);
+			   tmpbuf = tbuf;
+			   return true;
+		   }
+
 		   if(len < 8) {
 			   return false;
 		   }
@@ -232,69 +251,99 @@ public class ProxyClient implements Runnable {
 			return false;
 		   }
 
+		   if (msg.ip == null) {
+			   return false;
+		   }
+
 		   log(msg);
 
 		   switch(msg.command) {
 		   case Proxy.SOCKS_CMD_CONNECT:
-			   Socket s;
-			   ProxyMessage response = null;
+			   tryConn = false;
+			   new Thread(){
+				   public void run() {
+					   try {
+						   synchronized (this) {
+							   sleep(400);
+						   }
+						   Socket s = new Socket(msg.ip, msg.port);
+						   msock = s;
+						   log("Connected to " + s.getInetAddress() + ":" + s.getPort());
 
-			   if(proxy == null)
-				   s = new Socket(msg.ip, msg.port);
-			   else
-				   s = new SocksSocket(proxy, msg.ip, msg.port);
+						   ProxyMessage response = new Socks5Message(Proxy.SOCKS_SUCCESS,
+								   							s.getLocalAddress(),
+								   							s.getLocalPort());
 
-			   sock = s;
-			   log("Connected to " + s.getInetAddress() + ":" + s.getPort());
+						   synchronized (this) {
+							   response.writeWithClientfd(out, key);
+						   }
+						   System.out.println("new connection, fd=" + key);
+						   stat = GWLINK_CONNECT;
 
-			   if(msg instanceof Socks5Message) {
-				   response = new Socks5Message(Proxy.SOCKS_SUCCESS,
-						   							s.getLocalAddress(),
-						   							s.getLocalPort());
-			   } else {
-				   response = new Socks4Message(Socks4Message.REPLY_OK,
-						   						s.getLocalAddress(),
-						   						s.getLocalPort());
-			   }
-
-			   response.writeWithClientfd(out, key);
-			   System.out.println("new connection, fd=" + key);
-			   stat = GWLINK_CONNECT;
-
-			   if(sock != null) {
-				   thread = new Thread(this);
-				   thread.start();
-			   }
+						   if(msock != null) {
+							   thread = new Thread(){
+								   public void run() {
+									   SockRecvRun();
+								   };
+							   };
+							   thread.start();
+							   if(tmpbuf.length > 0) {
+								   msock.getOutputStream().write(tmpbuf);
+							   }
+						   }
+					   } catch(ConnectException e) {
+						   SocketConnectDstFailed(key);
+						   e.printStackTrace();
+					   } catch(SocketException e) {
+						   SocketConnectDstFailed(key);
+						   e.printStackTrace();
+					   } catch (IOException e) {
+						   SocketConnectDstFailed(key);
+						   e.printStackTrace();
+					   } catch (InterruptedException e) {
+						   e.printStackTrace();
+					   }
+				   };
+			   }.start();
 	        break;
 	      }
+
 		  return true;
 	   }
 
-	   public void endSession() throws IOException {
-		   loop = false;
-		   if(sock != null) {
-			   sock.close();
-		   }
-		   if(thread != null) {
-			   thread.interrupt();
-		   }
-		   System.out.println("connection remove, fd=" + key);
-	   }
-
-	   public void send(byte[] b, int off, int len) throws IOException {
-		   if(sock != null) {
-			   sock.getOutputStream().write(b, off, len);
+	   public void endSession() {
+		   try {
+			   loop = false;
+			   if(msock != null) {
+				   msock.close();
+			   }
+			   if(thread != null) {
+				   thread.interrupt();
+			   }
+			   System.out.println("connection remove, fd=" + key);
+		   } catch (IOException e) {
+			   e.printStackTrace();
 		   }
 	   }
 
-	   public void run() {
+	   public void send(byte[] b, int off, int len) {
+		   try {
+			   if(msock != null) {
+				   msock.getOutputStream().write(b, off, len);
+			   }
+		   } catch (IOException e) {
+			   e.printStackTrace();
+		   }
+	   }
+
+	   synchronized public void SockRecvRun() {
 		   try {
 			   int len;
 			   byte[] buf = new byte[BUF_SIZE];
 
 			   while(loop) {
-				   if(sock != null) {
-					   len = sock.getInputStream().read(buf, 8, BUF_SIZE-8);
+				   if(msock != null) {
+					   len = msock.getInputStream().read(buf, 8, BUF_SIZE-8);
 					   int reslen = len + 8;
 					   buf[0] = (byte)((reslen >> 24) & 0xFF);
 					   buf[1] = (byte)((reslen >> 16) & 0xFF);
@@ -305,17 +354,27 @@ public class ProxyClient implements Runnable {
 					   buf[6] = (byte)((key >> 8) & 0xFF);
 					   buf[7] = (byte)((key) & 0xFF);
 					   out.write(buf, 0, reslen);
+
+					   System.out.println("<=== datalen=" + reslen + ", fd=" + key);
+					   /*for (int i = 8; i < reslen; i++) {
+						   System.out.print(Integer.toHexString((buf[i]&0xff)).toUpperCase() + " ");
+					   }
+					   System.out.println();*/
 				   }
 				   else {
 					   loop = false;
+					   System.out.println("end recv for...");
 				   }
 			   }
 			} catch (SocketException e) {
 				// TODO Auto-generated catch block
+				e.printStackTrace();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 	   }
+
+	   public abstract void SocketConnectDstFailed(int fd);
    }
 }
