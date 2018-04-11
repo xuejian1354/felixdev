@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+
+<project name="RingoJS" default="jar" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+
+    <target name="init">
+        <property name="project" value="com.ymbl.smartgateway.rhinosite"/>
+        <property name="version" value="1.0.0"/>
+
+        <property name="home" value="."/>
+        <property name="main" value="../felix"/>
+
+        <property name="src" value="${home}/src"/>
+        <property name="lib" value="${main}/bundle"/>
+        <property name="ext" value="${main}/ext"/>
+        <property name="build" value="${home}/build"/>
+        <property name="classes" value="${build}/classes"/>
+        <property name="baseclasses" value="${home}/classes"/>
+
+        <property name="osgijar" value="${lib}/${project}-${version}.jar"/>
+
+        <property name="debug" value="on"/>
+        <property name="optimize" value="on"/>
+        <property name="deprecation" value="on"/>
+
+        <condition property="mvn" value="mvn.bat">
+            <os family="dos" />
+        </condition>
+        <condition property="mvn" value="mvn">
+            <not>
+                <isset property="mvn" />
+            </not>
+        </condition>
+
+        <path id="classpath">
+            <fileset dir="${lib}">
+                <include name="**/*.jar"/>
+                <exclude name="${osgijar}"/>
+            </fileset>
+            <fileset dir="${main}/bin"/>
+            <pathelement location="${classes}"/>
+            <pathelement location="${baseclasses}"/>
+        </path>
+    </target>
+
+    <target name="envjar" depends="init">
+        <exec executable="${mvn}" failonerror="true">
+            <arg line="-Dpackaging=felix install" />
+        </exec>
+        <exec executable="${mvn}" failonerror="true">
+            <arg line="-Dpackaging=http install" />
+        </exec>
+        <exec executable="${mvn}" failonerror="true">
+            <arg line="-Dpackaging=rhino install" />
+        </exec>
+	<copy todir="${main}/bundle" file="${home}/lib/h2-1.4.186.jar" />
+    </target>
+
+    <target name="compile" depends="envjar">
+        <mkdir dir="${classes}"/>
+        <javac srcdir="${src}"
+            source="1.5"
+            target="1.5"
+            destdir="${classes}"
+            debug="${debug}"
+            deprecation="${deprecation}"
+            optimize="${optimize}"
+            includeAntRuntime="false">
+                <compilerarg value="-Xlint:unchecked"/>
+                <classpath refid="classpath"/>
+        </javac>
+    </target>
+
+    <target name="jar" depends="compile">
+        <jar jarfile="${ext}/rt.jar"
+            basedir="${classes}"
+            includes="**/java/**" />
+        <jar jarfile="${osgijar}">
+            <fileset dir="${classes}" excludes="**/java/**"/>
+            <fileset dir="${baseclasses}"/>
+            <fileset dir="${src}" excludes="**/java/**,**/*.java,**/package.html"/>
+            <manifest>
+                <attribute name="Bundle-ManifestVersion" value="2"/>
+                <attribute name="Bundle-Name" value="Rhinosite"/>
+                <attribute name="Bundle-SymbolicName" value="com.ymbl.smartgateway.rhinosite"/>
+                <attribute name="Bundle-Version" value="1.0.0"/>
+                <attribute name="Bundle-Activator" value="com.ymbl.smartgateway.rhinosite.RhinoActivator"/>
+                <attribute name="Bundle-Vendor" value="YMBL"/>
+                <attribute name="Bundle-RequiredExecutionEnvironment" value="J2SE-1.5"/>
+                <attribute name="Import-Package" value='javax.xml.parsers,org.h2;version="1.4.186",org.mozilla.classfile;version="1.1.1.7R4-SNAPSHOT",org.mozilla.javascript;version="1.1.1.7R4-SNAPSHOT",org.mozilla.javascript.annotations;version="1.1.1.7R4-SNAPSHOT",org.mozilla.javascript.debug;version="1.1.1.7R4-SNAPSHOT",org.mozilla.javascript.json;version="1.1.1.7R4-SNAPSHOT",org.mozilla.javascript.tools;version="1.1.1.7R4-SNAPSHOT",org.mozilla.javascript.tools.debugger;version="1.1.1.7R4-SNAPSHOT",org.mozilla.javascript.tools.shell;version="1.1.1.7R4-SNAPSHOT",org.osgi.framework;version="1.5.0",org.osgi.service.log;version="1.3.0",org.w3c.dom,org.xml.sax,org.xml.sax.helpers'/>
+            </manifest>
+        </jar>
+    </target>
+
+</project>
