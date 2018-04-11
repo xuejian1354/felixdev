@@ -60,5 +60,17 @@
       </modules>
     </profile>
 
+    <profile>
+      <id>packaging-transite</id>
+      <activation>
+        <property>
+          <name>packaging</name>
+          <value>transite</value>
+        </property>
+      </activation>
+      <modules>
+        <module>com.ymbl.smartgateway.transite</module>
+      </modules>
+    </profile>
   </profiles>
 </project>

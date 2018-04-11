@@ -4,4 +4,5 @@ felix-cache/
 /felix/bin/
 /felix/bundle/
 /felix/conf
+.settings/
 *.swp
