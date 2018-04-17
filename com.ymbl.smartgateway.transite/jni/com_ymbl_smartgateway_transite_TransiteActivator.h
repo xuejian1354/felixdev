@@ -12,8 +12,16 @@ extern "C" {
  * Method:    getMacAddr
  * Signature: (Ljava/lang/String;)[B
  */
-JNIEXPORT jstring JNICALL Java_com_ymbl_smartgateway_transite_TransiteActivator_getMacAddr
+JNIEXPORT jbyteArray JNICALL Java_com_ymbl_smartgateway_transite_TransiteActivator_getMacAddr
   (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     com_ymbl_smartgateway_transite_TransiteActivator
+ * Method:    addTransRectRule
+ * Signature: (Ljava/lang/String;II)I
+ */
+JNIEXPORT jint JNICALL Java_com_ymbl_smartgateway_transite_TransiteActivator_addTransRectRule
+  (JNIEnv *, jobject, jstring, jint, jint);
 
 #ifdef __cplusplus
 }

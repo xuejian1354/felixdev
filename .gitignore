@@ -5,5 +5,9 @@ felix-cache/
 /felix/bundle/
 /felix/conf
 /felix/ext
+/felix/core.*
+/felix/*.log
+com.ymbl.smartgateway.transite/jni/iptables/
+transite.so
 .settings/
 *.swp

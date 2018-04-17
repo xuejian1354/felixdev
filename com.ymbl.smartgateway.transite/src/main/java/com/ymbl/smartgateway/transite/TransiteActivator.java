@@ -24,38 +24,39 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.Iterator;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-
-//import com.chinamobile.smartgateway.commservices.DeviceInfoQueryService;
-//import com.chinamobile.smartgateway.transferservices.TrafficForwardService;
 import com.ymbl.smartgateway.transite.log.SystemLogger;
 
 public class TransiteActivator extends AbstractActivator implements Runnable{
 
+	public final static String CLASSNAME = TransiteActivator.class.getName();
 	public final static String defaultName = "trans-plugin";
 	private String macdev = "eth0";
-
-	//private DeviceInfoQueryService devInfoService;
-	//private TrafficForwardService trafficService;
+	private static boolean loadreslib = false;
+	private static int redirectPort = 0;
 
 	@Override
 	protected void doStart() throws Exception {
 		// TODO Auto-generated method stub
-		//devInfoService = (DeviceInfoQueryService) this.context.getService(
-			//	this.context.getServiceReference(DeviceInfoQueryService.class.getName()));
-		//trafficService = (TrafficForwardService) this.context.getService(
-			//	this.context.getServiceReference(TrafficForwardService.class.getName()));
-
-		SystemLogger.info("Plug start ...");
+		SystemLogger.info(CLASSNAME.substring(CLASSNAME.lastIndexOf('.')) + " start ...");
         new Thread(this).start();
 	}
 
 	@Override
 	protected void doStop() throws Exception {
 		// TODO Auto-generated method stub
-		SystemLogger.info("Plug stop ...");
+		SystemLogger.info(CLASSNAME.substring(CLASSNAME.lastIndexOf('.')) + " stop ...");
 	}
 
 	public void run() {
@@ -64,28 +65,123 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 		try {
 			ResourceBundle resource = ResourceBundle.getBundle("config");
 			plugName = resource.getString("PluginName");
-			macdev = resource.getString("MacDev");
+			if (plugName == null || plugName.equals("")) {
+				plugName = defaultName;
+			}
+
+			String macstrcfg = resource.getString("MacDev");
+			if (macstrcfg != null && macstrcfg.length() > 0) {
+				macdev = macstrcfg;
+			}
+
+			String loadlibstrcfg = resource.getString("LoadLibRes");
+			if (loadlibstrcfg != null && loadlibstrcfg.equals("true")) {
+				loadreslib = true;
+			}
+
+			redirectPort = Integer.valueOf(resource.getString("RedirectPort"));
+			if (redirectPort <= 0) {
+				SystemLogger.info("get RedirectPort error");
+				return;
+			}
+
+			loadLib("transite");
 		} catch (MissingResourceException e) {
 			// TODO: handle exception
-		} finally {
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}finally {
 			SystemLogger.info("Plugin Name: " + plugName);
 		}
 
+		getMacFromJNITest();
+		addRedirectHostRule();
+
+		startSelectListen(redirectPort);
+	}
+
+	public void getMacFromJNITest() {
+		byte[] macaddr = getMacAddr(macdev);
+		if (macaddr != null) {
+			String macstr = "";
+			for (byte b : macaddr) {
+				macstr += String.format("%02X:", new Integer(b&0xFF));
+			}
+			macstr = macstr.substring(0, macstr.length()-1);
+			SystemLogger.info("Get MAC from JNI: " + macstr);
+		}
+		else {
+			SystemLogger.info(macdev + " doesn't get mac address");
+		}
+	}
+
+	public void startSelectListen(int port) {
 		try {
-			loadLib("transite");
-			String macaddr = getMacAddr(macdev);
-			SystemLogger.info("Get MAC from JNI: " + macaddr);
+			ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+			serverSocketChannel.configureBlocking(false);
+			serverSocketChannel.socket().bind(new InetSocketAddress(port));
+	        Selector selector = Selector.open();
+	        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+	        while (true) {
+	        	int n = selector.select();
+	            if (n == 0) {
+	                continue;
+	            }
+
+	            Iterator<SelectionKey> ite = selector.selectedKeys().iterator();
+	            while (ite.hasNext()) {
+	            	SelectionKey key = ite.next();
+	            	if (key.isAcceptable()) {
+	            		ServerSocketChannel server = (ServerSocketChannel) key.channel();
+	                    SocketChannel channel = server.accept();
+	                    if (channel == null) {
+	                        return;
+	                    }
+	                    Socket sock = channel.socket();
+	                    SystemLogger.info("local: " + sock.getLocalAddress().toString() + ", "
+	                    		+ sock.getLocalPort() + "; remote: " + sock.getRemoteSocketAddress().toString()
+	                    		+ ", " + sock.getPort() + ", " + sock.getInetAddress().toString());
+	                    channel.configureBlocking(false);
+	                    channel.register(selector, SelectionKey.OP_READ);
+	            	}
+	            	else if (key.isReadable()) {
+	                    int count;
+	            		SocketChannel socketChannel = (SocketChannel) key.channel();
+	            		ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4096);
+	                    byteBuffer.order(ByteOrder.BIG_ENDIAN);
+	                    byteBuffer.clear();
+
+	                    while ((count = socketChannel.read(byteBuffer)) > 0) {
+	                        byteBuffer.flip();
+	                        while (byteBuffer.hasRemaining()) {
+	                        	
+	                            socketChannel.write(byteBuffer);
+	                        }
+	                        byteBuffer.clear();
+	                    }
+
+	                    if (count < 0) {
+	                        socketChannel.close();
+	                    }
+	                }
+
+	            	ite.remove();
+	            }
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
 
-		//String mac = devInfoService.getDeviceMAC();
-		//String osgiInfo = devInfoService.getOSGiInfo();
-
-		//SystemLogger.info("Get Message MAC: " + mac + ", osgi: " + osgiInfo);
-		//trafficService.addForwardRule("192.168.2.174", "8000-9000", "TCP", null, "192.168.2.1", 0);
-		//SystemLogger.info("RuleInfo: " + trafficService.getForwardRuleInfo());
+	public void addRedirectHostRule() {
+		iptables("iptables -t nat -A PREROUTING -p tcp -d 31.13.86.8 --dport " + 80 + " -j REDIRECT --to-port " + redirectPort);
+		iptables("iptables -t nat -A PREROUTING -p tcp -d 106.39.167.118 --dport " + 80 + " -j REDIRECT --to-port " + redirectPort);
+		iptables("iptables -t nat -nvL PREROUTING");
+		iptables("iptables -t nat -D PREROUTING 1");
+		iptables("iptables -t nat -D PREROUTING 1");
 	}
 
 	private synchronized static void loadLib(String libName) throws IOException {
@@ -98,7 +194,7 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 		FileOutputStream writer = null;  
 
 		File extractedLibFile = new File(nativeTempDir+File.separator+libFullName);
-		if(!extractedLibFile.exists()) {
+		if(!extractedLibFile.exists() || loadreslib == true) {
 			try {
 				in = TransiteActivator.class.getResourceAsStream("/" + libFullName);
 				if(in==null)
@@ -106,7 +202,7 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 				TransiteActivator.class.getResource(libFullName);
 				reader = new BufferedInputStream(in);
 				writer = new FileOutputStream(extractedLibFile);
-				
+
 				byte[] buffer = new byte[1024];
 				while (reader.read(buffer) > 0) {
 					writer.write(buffer);
@@ -124,5 +220,6 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 		System.load(extractedLibFile.toString());
 	}
 
-	public native String getMacAddr(String dev);
+	public native byte[] getMacAddr(String dev);
+	public native int iptables(String rule);
 }
