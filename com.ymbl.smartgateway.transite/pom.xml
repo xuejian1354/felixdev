@@ -54,7 +54,11 @@
                         <Bundle-Activator>${pom.artifactId}.TransiteActivator</Bundle-Activator>
                         <Include-Resource>
 				src/main/java/config.properties,
-				src/main/java/transite.so
+				src/main/java/transite.so,
+				src/main/java/libip4tc.so.0,
+				src/main/java/libip6tc.so.0,
+				src/main/java/libxtables.so.10,
+				src/main/java/xtables
 			</Include-Resource>
                     </instructions>
                 </configuration>
