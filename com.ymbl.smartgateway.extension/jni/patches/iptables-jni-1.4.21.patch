@@ -1,6 +1,6 @@
 --- iptables/iptables/Makefile.am
 +++ iptables/iptables/Makefile.am
-@@ -82,8 +82,17 @@ iptables-extensions.8: iptables-extensions.8.tmpl ../extensions/matches.man ../e
+@@ -43,8 +43,17 @@ iptables-extensions.8: iptables-extensions.8.tmpl ../extensions/matches.man ../e
  		-e '/@MATCH@/ r ../extensions/matches.man' \
  		-e '/@TARGET@/ r ../extensions/targets.man' $< >$@;
  
@@ -12,7 +12,7 @@
 +
 +libtransite_la_LIBADD = ../libiptc/libip4tc.la ../libiptc/libip6tc.la ../libxtables/libxtables.la
 +libtransite_la_CFLAGS = -Wall -fPIC -D_JNI_IMPLEMENTATION_ -I${JHOME}/include -I${JHOME}/include/linux
-+libtransite_la_SOURCES = ${xtables_multi_SOURCES} com_ymbl_smartgateway_transite_TransiteActivator.c
++libtransite_la_SOURCES = ${xtables_multi_SOURCES} com_ymbl_smartgateway_extension_IpTables.c
 +libtransite_la_LDFLAGS = -version-info 1:0:1
 +
  # Using if..fi avoids an ugly "error (ignored)" message :)
@@ -20,7 +20,7 @@
  	-if test -z "${DESTDIR}"; then /sbin/ldconfig; fi;
 --- iptables/iptables/iptables-standalone.c
 +++ iptables/iptables/iptables-standalone.c
-@@ -58,7 +58,7 @@ iptables_main(int argc, char *argv[])
+@@ -58,7 +58,7 @@
  	init_extensions4();
  #endif
  
@@ -29,8 +29,8 @@
  	if (ret) {
  		ret = iptc_commit(handle);
  		iptc_free(handle);
-@@ -77,5 +77,5 @@ iptables_main(int argc, char *argv[])
- 			exit(RESOURCE_PROBLEM);
+@@ -78,5 +78,5 @@
+ 		}
  	}
  
 -	exit(!ret);

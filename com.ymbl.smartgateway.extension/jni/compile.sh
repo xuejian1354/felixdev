@@ -5,23 +5,26 @@ EXDIR=$(dirname ${EXSH})
 
 PRETARGET=/tmp/transite-target
 
+cfile=com_ymbl_smartgateway_extension_IpTables.c
+hfile=com_ymbl_smartgateway_extension_IpTables.h
+
 cd ${EXDIR}
 
 [ ! -d "iptables" ] && \
     git clone -b v1.4.21 git://git.netfilter.org/iptables && \
     rm -rf iptables/.git && \
     patch -p0 < patches/iptables-jni-1.4.21.patch && \
-    cp -v com_ymbl_smartgateway_transite_TransiteActivator.c iptables/iptables/ && \
-    cp -v com_ymbl_smartgateway_transite_TransiteActivator.h iptables/iptables/ && \
+    cp -v ${cfile} iptables/iptables/ && \
+    cp -v ${hfile} iptables/iptables/ && \
     cp -v dlog.h iptables/iptables/
 
-isnew=`find com_ymbl_smartgateway_transite_TransiteActivator.c -newer iptables/iptables/com_ymbl_smartgateway_transite_TransiteActivator.c`
-[ "$isnew" == "com_ymbl_smartgateway_transite_TransiteActivator.c" ] && \
-    cp -v com_ymbl_smartgateway_transite_TransiteActivator.c iptables/iptables/
+isnew=`find ${cfile} -newer iptables/iptables/${cfile}`
+[ "$isnew" == "${cfile}" ] && \
+    cp -v ${cfile} iptables/iptables/
 
-isnew=`find com_ymbl_smartgateway_transite_TransiteActivator.h -newer iptables/iptables/com_ymbl_smartgateway_transite_TransiteActivator.h`
-[ "$isnew" == "com_ymbl_smartgateway_transite_TransiteActivator.h" ] && \
-    cp -v com_ymbl_smartgateway_transite_TransiteActivator.h iptables/iptables/
+isnew=`find ${hfile} -newer iptables/iptables/${hfile}`
+[ "$isnew" == "${hfile}" ] && \
+    cp -v ${hfile} iptables/iptables/
 
 isnew=`find dlog.h -newer iptables/iptables/dlog.h`
 [ "$isnew" == "dlog.h" ] && \
@@ -31,8 +34,8 @@ cd iptables
 rm -rf ${PRETARGET}
 
 [ ! -x "configure" ] && \
-    ./autogen.sh && ./configure --prefix=${PRETARGET} --host=mips-en751221-linux-gnu
-#   ./autogen.sh && ./configure --prefix=${PRETARGET}
+    ./autogen.sh && ./configure --prefix=${PRETARGET} --host=arm-develop-linux-gnueabi
+#    ./autogen.sh && ./configure --prefix=${PRETARGET}
 
 make && make install
 rm -rf ${EXDIR}/iptables/target

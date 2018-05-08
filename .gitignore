@@ -7,8 +7,8 @@ felix-cache/
 /felix/ext
 /felix/core.*
 /felix/*.log
-com.ymbl.smartgateway.transite/jni/iptables/
-com.ymbl.smartgateway.transite/src/main/java/xtables/
+com.ymbl.smartgateway.extension/jni/iptables/
+com.ymbl.smartgateway.extension/src/main/java/xtables/
 transite.so
 libip4tc.so*
 libip6tc.so*

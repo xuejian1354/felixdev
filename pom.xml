@@ -61,6 +61,19 @@
     </profile>
 
     <profile>
+      <id>packaging-extension</id>
+      <activation>
+        <property>
+          <name>packaging</name>
+          <value>extension</value>
+        </property>
+      </activation>
+      <modules>
+        <module>com.ymbl.smartgateway.extension</module>
+      </modules>
+    </profile>
+
+    <profile>
       <id>packaging-transite</id>
       <activation>
         <property>

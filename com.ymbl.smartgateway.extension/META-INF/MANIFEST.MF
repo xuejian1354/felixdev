@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Extension
+Bundle-SymbolicName: com.ymbl.smartgateway.extension
+Bundle-Version: 1.0.0
+Bundle-Vendor: YMBL
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Export-Package: com.ymbl.smartgateway.extension

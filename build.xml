@@ -1,11 +1,7 @@
 <?xml version="1.0"?>
 
-<project name="RingoJS" default="install" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
-    <target name="jsocks">
-        <property name="name" value="jsocks"/>
-        <property name="project" value="com.ymbl.smartgateway.jsocks"/>
-        <property name="version" value="1.0.0"/>
-
+<project name="RingoJS" default="transite" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+    <target name="felix">
         <property name="debug" value="on"/>
         <property name="optimize" value="on"/>
         <property name="deprecation" value="on"/>
@@ -18,32 +14,26 @@
                 <isset property="mvn" />
             </not>
         </condition>
-    </target>
-    <target name="transite">
-        <property name="name" value="transite"/>
-        <property name="project" value="com.ymbl.smartgateway.transite"/>
-        <property name="version" value="1.0.0"/>
-
-        <property name="debug" value="on"/>
-        <property name="optimize" value="on"/>
-        <property name="deprecation" value="on"/>
-
-        <condition property="mvn" value="mvn.bat">
-            <os family="dos" />
-        </condition>
-        <condition property="mvn" value="mvn">
-            <not>
-                <isset property="mvn" />
-            </not>
-        </condition>
-    </target>
-    <target name="install" depends="transite">
         <exec executable="${mvn}" failonerror="true">
             <arg line="-Dpackaging=felix install" />
         </exec>
+    </target>
+    <target name="jsocks" depends="felix">
         <exec executable="${mvn}" failonerror="true">
-            <arg line="-Dpackaging=${name} install" />
+            <arg line="-Dpackaging=jsocks install" />
         </exec>
-        <copy todir="felix/bundle" file="${project}/target/${project}-${version}.jar" />
+        <copy todir="felix/bundle" file="com.ymbl.smartgateway.jsocks/target/com.ymbl.smartgateway.jsocks-1.0.0.jar"/>
+    </target>
+    <target name="extension" depends="felix">
+        <exec executable="${mvn}" failonerror="true">
+            <arg line="-Dpackaging=extension install" />
+        </exec>
+        <copy todir="felix/bundle" file="com.ymbl.smartgateway.extension/target/com.ymbl.smartgateway.extension-1.0.0.jar"/>
+    </target>
+    <target name="transite" depends="extension">
+        <exec executable="${mvn}" failonerror="true">
+            <arg line="-Dpackaging=transite -Djava.ext.dirs=felix/bundle install" />
+        </exec>
+        <copy todir="felix/bundle" file="com.ymbl.smartgateway.transite/target/com.ymbl.smartgateway.transite-1.0.0.jar"/>
     </target>
 </project>

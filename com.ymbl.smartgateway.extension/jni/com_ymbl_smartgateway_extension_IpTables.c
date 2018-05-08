@@ -9,7 +9,7 @@
 #include <linux/sockios.h>
 #include <netinet/if_ether.h>
 #include "dlog.h"
-#include "com_ymbl_smartgateway_transite_TransiteActivator.h"
+#include "com_ymbl_smartgateway_extension_IpTables.h"
 
 extern int iptables_main(int, char **);
 
@@ -17,7 +17,7 @@ static char* jTostring(JNIEnv*, jstring);
 //static jstring stoJstring(JNIEnv*, const char*);
 
 
-JNIEXPORT jbyteArray JNICALL Java_com_ymbl_smartgateway_transite_TransiteActivator_getMacAddr
+JNIEXPORT jbyteArray JNICALL Java_com_ymbl_smartgateway_extension_IpTables_getMacAddr
   (JNIEnv *env, jobject obj, jstring macdev)
 {
 	struct ifreq ifreq;
@@ -45,7 +45,7 @@ JNIEXPORT jbyteArray JNICALL Java_com_ymbl_smartgateway_transite_TransiteActivat
 	return bytes;
 }
 
-JNIEXPORT jint JNICALL Java_com_ymbl_smartgateway_transite_TransiteActivator_iptables
+JNIEXPORT jint JNICALL Java_com_ymbl_smartgateway_extension_IpTables_rule
   (JNIEnv *env, jobject obj, jstring rule)
 {
 	int ret = -1;
