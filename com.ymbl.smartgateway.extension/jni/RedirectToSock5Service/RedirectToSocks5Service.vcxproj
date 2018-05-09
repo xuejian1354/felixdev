@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{42E2B4DA-12FD-4102-8C16-348EDBFB0250}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>IpProxy</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>H:\MyProjects\TcpServer\libevent\include</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>H:\MyProjects\TcpServer\Debug;H:\MyProjects\libevhtp-1.2.16\Debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ws2_32.lib;libevent_d.lib;libevhtp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Cfg.cpp" />
+    <ClCompile Include="RedirectListener.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="RedirectToSocks5Service.cpp" />
+    <ClCompile Include="Utils\Event\EventDefer.cpp" />
+    <ClCompile Include="Utils\Event\SocketUtils.cpp" />
+    <ClCompile Include="Utils\Event\TcpAcceptor.cpp" />
+    <ClCompile Include="Utils\TinyLog.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Cfg.h" />
+    <ClInclude Include="RedirectListener.h" />
+    <ClInclude Include="RedirectClient.h" />
+    <ClInclude Include="RedirectToSocks5Service.h" />
+    <ClInclude Include="Stdafx.h" />
+    <ClInclude Include="Utils\AutoBuffer.h" />
+    <ClInclude Include="Utils\Event\EventDefer.h" />
+    <ClInclude Include="Utils\Event\ListenerEvD.h" />
+    <ClInclude Include="Utils\Event\RefBuffer.h" />
+    <ClInclude Include="Utils\Event\SocketUtils.h" />
+    <ClInclude Include="Utils\Event\TcpAcceptor.h" />
+    <ClInclude Include="Utils\initDaemon.h" />
+    <ClInclude Include="Utils\LinkedList.h" />
+    <ClInclude Include="Utils\ObjectPool.h" />
+    <ClInclude Include="Utils\TinyLog.h" />
+    <ClInclude Include="Utils\Utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Utils\Event\Signals.inl" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -50,7 +50,8 @@
 				src/main/java/libip4tc.so.0,
 				src/main/java/libip6tc.so.0,
 				src/main/java/libxtables.so.10,
-				src/main/java/xtables
+				src/main/java/xtables,
+				src/main/java/rectsocks5.so
 			</Include-Resource>
                     </instructions>
                 </configuration>

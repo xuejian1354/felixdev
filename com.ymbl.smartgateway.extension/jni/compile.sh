@@ -3,8 +3,6 @@
 EXSH=`pwd`/$0
 EXDIR=$(dirname ${EXSH})
 
-PRETARGET=/tmp/transite-target
-
 cfile=com_ymbl_smartgateway_extension_IpTables.c
 hfile=com_ymbl_smartgateway_extension_IpTables.h
 
@@ -30,18 +28,20 @@ isnew=`find dlog.h -newer iptables/iptables/dlog.h`
 [ "$isnew" == "dlog.h" ] && \
     cp -v dlog.h iptables/iptables/
 
-cd iptables
-rm -rf ${PRETARGET}
+for i in iptables RedirectToSock5Service;
+do
+  cd $i
+  [ ! -x "configure" ] && ./autogen.sh && \
+   ./configure --prefix=${EXDIR}/$i/target --host=arm-develop-linux-gnueabi CXXFLAGS=-I${EXDIR}/$i/extra/include LDFLAGS=-L${EXDIR}/$i/extra/lib/arm-develop
+#   ./configure --prefix=${EXDIR}/$i/target
 
-[ ! -x "configure" ] && \
-    ./autogen.sh && ./configure --prefix=${PRETARGET} --host=arm-develop-linux-gnueabi
-#    ./autogen.sh && ./configure --prefix=${PRETARGET}
+  make && make install
+  cd ../
+done
 
-make && make install
-rm -rf ${EXDIR}/iptables/target
-mv ${PRETARGET} ${EXDIR}/iptables/target
-cp -v ${EXDIR}/iptables/target/lib/libtransite.so.0.1.0 ../../src/main/java/transite.so
-cp -v ${EXDIR}/iptables/target/lib/libip4tc.so.0 ../../src/main/java/
-cp -v ${EXDIR}/iptables/target/lib/libip6tc.so.0 ../../src/main/java/
-cp -v ${EXDIR}/iptables/target/lib/libxtables.so.10 ../../src/main/java/
-cp -av ${EXDIR}/iptables/target/lib/xtables ../../src/main/java/
+cp -v ${EXDIR}/iptables/target/lib/libtransite.so.0.1.0 ../src/main/java/transite.so
+cp -v ${EXDIR}/iptables/target/lib/libip4tc.so.0 ../src/main/java/
+cp -v ${EXDIR}/iptables/target/lib/libip6tc.so.0 ../src/main/java/
+cp -v ${EXDIR}/iptables/target/lib/libxtables.so.10 ../src/main/java/
+cp -av ${EXDIR}/iptables/target/lib/xtables ../src/main/java/
+cp -v ${EXDIR}/RedirectToSock5Service/target/lib/librectsocks5.so.0.1.0 ../src/main/java/rectsocks5.so
