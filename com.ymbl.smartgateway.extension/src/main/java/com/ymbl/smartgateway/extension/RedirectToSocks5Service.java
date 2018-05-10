@@ -22,7 +22,7 @@ public class RedirectToSocks5Service {
 	public static RedirectToSocks5Service instance(){
 		if (rectService == null) {
 			rectService = new RedirectToSocks5Service();
-			System.out.println("IpTables instance");
+			System.out.println("RedirectToSocks5Service instance ===>");
 		}
 
 		return rectService;
@@ -76,12 +76,6 @@ public class RedirectToSocks5Service {
 		}
 	}
 
-	public native void start(String redirectListenIp, 
-								int redirectListenPort,
-								String socks5ServerHost,
-								int socks5ServerPort,
-								String socks5UserName,
-								String socks5Password);
-
+	public native void start(int redirectPort, String proxyIp, int proxyPort, String Auth);
 	public native void stop();
 }

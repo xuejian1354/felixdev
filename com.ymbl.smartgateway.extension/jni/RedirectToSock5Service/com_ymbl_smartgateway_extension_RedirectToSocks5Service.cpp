@@ -1,5 +1,6 @@
 #include "com_ymbl_smartgateway_extension_RedirectToSocks5Service.h"
 #include "RedirectToSocks5Service.h"
+#include <cstring>
 
 class JStrVal
 {
@@ -7,11 +8,11 @@ public:
 	JStrVal(JNIEnv *env,jstring jstr) {
 		env_ = env;
 		jstr_ = jstr;
-		val_ = env_->GetStringUTFChars(jstr,0);
+		val_ = jstr==0 ? 0 : env_->GetStringUTFChars(jstr,0);
 	}
 
 	~JStrVal(void) {
-		if (val_ != 0)
+		if (jstr_ != 0)
 			env_->ReleaseStringUTFChars(jstr_,val_);
 	}
 
@@ -26,23 +27,19 @@ private:
 };
 
 JNIEXPORT void JNICALL Java_com_ymbl_smartgateway_extension_RedirectToSocks5Service_start
-  (JNIEnv *jenv, jclass jcls, jstring redirectListenIp, jint redirectListenPort, 
-	jstring socks5ServerHost, jint socks5ServerPort,
-	 jstring socks5UserName, jstring socks5Password)
+  (JNIEnv *jenv, jobject jobj, jint redirectPort,  jstring proxyIp,jint proxyPort, jstring auth)
 {
-	JStrVal jRedirectListenIp(jenv,redirectListenIp);
-	JStrVal jSocksServerHost(jenv,socks5ServerHost);
-	JStrVal jSocks5UserName(jenv,socks5UserName);
-	JStrVal jSocks5Password(jenv,socks5Password);
+	JStrVal jProxyIp(jenv, proxyIp);
+	JStrVal jAuth(jenv, auth);
+	char *user = strtok((char *)jAuth.get(), ":");
+	char *pass = strtok(NULL, ":");
 
-	startAsyncRedirectToSocks5Service(
-		jRedirectListenIp.get(),(unsigned short)redirectListenPort,
-		jSocksServerHost.get(),(unsigned short)socks5ServerPort,
-		jSocks5UserName.get(),jSocks5Password.get());
+	startAsyncRedirectToSocks5Service("127.0.0.1", (unsigned short)redirectPort,
+		jProxyIp.get(), (unsigned short)proxyPort, user, pass);
 }
 
 JNIEXPORT void JNICALL Java_com_ymbl_smartgateway_extension_RedirectToSocks5Service_stop
-  (JNIEnv *jenv, jobject jcls)
+  (JNIEnv *jenv, jobject jobj)
 {
 	endAsyncRedirectToSocks5Service();
 }

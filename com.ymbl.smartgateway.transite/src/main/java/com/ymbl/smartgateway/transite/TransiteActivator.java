@@ -33,6 +33,7 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import com.ymbl.smartgateway.extension.IpTables;
+import com.ymbl.smartgateway.extension.RedirectToSocks5Service;
 import com.ymbl.smartgateway.transite.log.SystemLogger;
 
 public class TransiteActivator extends AbstractActivator implements Runnable{
@@ -77,7 +78,12 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 		}
 
 		IpTables iptables = IpTables.instance();
-		iptables.rule("iptables -t nat -nvL");
+		//iptables.rule("iptables -t nat -I PREROUTING -p tcp -d 192.168.1.3 --dport 8088 -j REDIRECT --to 8011");
+		iptables.rule("iptables -t nat -nvL PREROUTING");
+
+		RedirectToSocks5Service rectservice = RedirectToSocks5Service.instance();
+		rectservice.start(8011, "192.168.1.3", 5000, "root:loong1354");
+		//rectservice.stop();
 		//startSelectListen(redirectPort);
 	}
 

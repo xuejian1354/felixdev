@@ -71,6 +71,7 @@ void RedirectListener::onNewConn(evutil_socket_t fd, sockaddr_in *addr)
 	else
 #endif
 	{
+		LOG_DEBUG(inetNtoa(dstAddr.ip()) << dstAddr.port());
 		RedirectClient *redirectClient = ListenerEvD<RedirectListener, RedirectClient>::evStartNewClient(this, fd, (unsigned&)addr->sin_addr);
 		if (redirectClient != NULL) {
 			redirectClient->setDst(dstAddr.ip(),dstAddr.port());
@@ -90,7 +91,7 @@ void RedirectListener::onSocks5Write(RedirectClient *redirectClient)
 
 void RedirectListener::onSocks5Event(RedirectClient *redirectClient,short what)
 { 
-	LOG_INFO(redirectClient << __FUNCTION__ << what);
+	LOG_INFO(redirectClient << __FUNCTION__ << what << (int)redirectClient->getState());
 	if (what == BEV_EVENT_CONNECTED) {
 		sendSocks5MethodPacket(redirectClient);
 	}

@@ -35,7 +35,7 @@ AUTOMAKE_OPTIONS = foreign
 
 JHOME=/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.41.x86_64
 lib_LTLIBRARIES = librectsocks5.la
-librectsocks5_la_LIBADD = -lpthread -levent
+librectsocks5_la_LIBADD = -lpthread -l:libevent.a
 librectsocks5_la_CXXFLAGS = -Wall -fPIC -D_JNI_IMPLEMENTATION_ -I${JHOME}/include -I${JHOME}/include/linux
 librectsocks5_la_SOURCES = ${CPP_FILES} com_ymbl_smartgateway_extension_RedirectToSocks5Service.cpp
 librectsocks5_la_LDFLAGS = -version-info 1:0:1

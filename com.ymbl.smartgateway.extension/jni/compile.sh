@@ -3,6 +3,8 @@
 EXSH=`pwd`/$0
 EXDIR=$(dirname ${EXSH})
 
+PRETARGET=/tmp/transite-target
+
 cfile=com_ymbl_smartgateway_extension_IpTables.c
 hfile=com_ymbl_smartgateway_extension_IpTables.h
 
@@ -32,10 +34,12 @@ for i in iptables RedirectToSock5Service;
 do
   cd $i
   [ ! -x "configure" ] && ./autogen.sh && \
-   ./configure --prefix=${EXDIR}/$i/target --host=arm-develop-linux-gnueabi CXXFLAGS=-I${EXDIR}/$i/extra/include LDFLAGS=-L${EXDIR}/$i/extra/lib/arm-develop
-#   ./configure --prefix=${EXDIR}/$i/target
+   ./configure --prefix=${PRETARGET} --host=arm-develop-linux-gnueabi CXXFLAGS=-I${EXDIR}/$i/extra/include LDFLAGS=-L${EXDIR}/$i/extra/lib/arm-develop
+#   ./configure --prefix=${PRETARGET}
 
   make && make install
+  rm -rf ${EXDIR}/$i/target
+  mv ${PRETARGET} ${EXDIR}/$i/target
   cd ../
 done
 

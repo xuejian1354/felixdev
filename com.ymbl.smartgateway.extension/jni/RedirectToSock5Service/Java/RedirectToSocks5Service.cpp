@@ -8,11 +8,11 @@ public:
 	JStrVal(JNIEnv *env,jstring jstr) {
 		env_ = env;
 		jstr_ = jstr;
-		val_ = env_->GetStringUTFChars(jstr,0);
+		val_ = jstr==0 ? 0 : env_->GetStringUTFChars(jstr,0);
 	}
 
 	~JStrVal(void) {
-		if (val_ != 0)
+		if (jstr_ != 0)
 			env_->ReleaseStringUTFChars(jstr_,val_);
 	}
 

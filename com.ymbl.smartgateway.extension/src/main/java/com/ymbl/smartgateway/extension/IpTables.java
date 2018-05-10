@@ -60,9 +60,9 @@ public class IpTables {
 				"libxt_tos.so", "libxt_u32.so", "libxt_udp.so"
 		};
 
-		loadLib("libip4tc.so.0", "/tmp/transite-target/lib", false, false);
-		loadLib("libip6tc.so.0", "/tmp/transite-target/lib", false, false);
-		loadLib("libxtables.so.10", "/tmp/transite-target/lib", false, false);
+		loadLib("libip4tc.so.0", "/lib", false, false);
+		loadLib("libip6tc.so.0", "/lib", false, false);
+		loadLib("libxtables.so.10", "/lib", false, false);
 		for (String xtlib : xtables_lib_list) {
 			loadLib(xtlib, "/tmp/transite-target/lib/xtables", false, false);
 		}

@@ -35,7 +35,7 @@ public:
 			(bufferevent_data_cb)H::cbRead, 
 			(bufferevent_data_cb)H::cbWrite,
 			(bufferevent_event_cb)H::cbEvent, client);
-		bufferevent_enable(bev, EV_WRITE | EV_READ);
+		//bufferevent_enable(bev, EV_WRITE | EV_READ);
 		return client;
 	}
 	 
