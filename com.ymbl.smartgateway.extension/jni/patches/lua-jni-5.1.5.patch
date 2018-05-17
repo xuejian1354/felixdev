@@ -1,0 +1,11 @@
+--- lua/src/Makefile
++++ lua/src/Makefile
+@@ -96,7 +96,7 @@ generic:
+ 	$(MAKE) all MYCFLAGS=
+ 
+ linux:
+-	$(MAKE) all MYCFLAGS=-DLUA_USE_LINUX MYLIBS="-Wl,-E -ldl -lreadline -lhistory -lncurses"
++	$(MAKE) all MYCFLAGS=-DLUA_USE_LINUX MYLIBS="${LDFLAGS} -Wl,-E -ldl -l:libreadline.a -l:libhistory.a -l:libncurses.a"
+ 
+ macosx:
+ 	$(MAKE) all MYCFLAGS=-DLUA_USE_LINUX MYLIBS="-lreadline"

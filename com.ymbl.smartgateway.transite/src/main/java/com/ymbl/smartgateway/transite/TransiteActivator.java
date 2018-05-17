@@ -98,7 +98,7 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 			}
 			iptables.rule("iptables -t nat -nvL PREROUTING");*/
 
-			RedirectToSocks5Service rectservice = RedirectToSocks5Service.instance();
+			RedirectToSocks5Service rectservice = (RedirectToSocks5Service) RedirectToSocks5Service.instance();
 			rectservice.start(redirectPort, proxyHost, socksAuth);
 			//rectservice.stop();
 			//startSelectListen(redirectPort);

@@ -1,34 +1,12 @@
 package com.ymbl.smartgateway.extension;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
-public class IpTables {
+public class IpTables extends LoadLib {
 
-	private static IpTables iptables = null;
-
-	private IpTables(){
-		try {
-			addLoadLibs(false);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	public static IpTables instance(){
-		if (iptables == null) {
-			iptables = new IpTables();
-			System.out.println("IpTables instance");
-		}
-
-		return iptables;
-	}
-
+	@Override
 	public void addLoadLibs(boolean isreload) throws IOException {
+		// TODO Auto-generated method stub
 		String[] xtables_lib_list = {
 				"libip6t_DNAT.so", "libip6t_DNPT.so", "libip6t_HL.so", "libip6t_LOG.so", 
 				"libip6t_MASQUERADE.so", "libip6t_NETMAP.so", "libip6t_REDIRECT.so", 
@@ -67,55 +45,7 @@ public class IpTables {
 			loadLib(xtlib, "/tmp/transite-target/lib/xtables", false, false);
 		}
 
-		loadLib("transite.so", "/tmp/transite-target/lib", true, isreload);
-	}
-
-	private synchronized static void loadLib(String libName, String targetDir, boolean fornative, boolean isreload) throws IOException {
-
-		InputStream in = null;
-		BufferedInputStream reader = null;
-		FileOutputStream writer = null;  
-
-		File ftd = new File(targetDir);
-		if (ftd.isFile()) {
-			ftd.delete();
-		}
-
-		if (!ftd.exists()) {
-			ftd.mkdirs();
-		}
-
-		File extractedLibFile = new File(targetDir+"/"+libName);
-		if (isreload && extractedLibFile.exists()) {
-			extractedLibFile.delete();
-		}
-
-		if(!extractedLibFile.exists()) {
-			try {
-				in = IpTables.class.getResourceAsStream("/" + libName);
-				if(in==null)
-					in =  IpTables.class.getResourceAsStream(libName);
-				reader = new BufferedInputStream(in);
-				writer = new FileOutputStream(extractedLibFile);
-
-				byte[] buffer = new byte[1024];
-				while (reader.read(buffer) > 0) {
-					writer.write(buffer);
-					buffer = new byte[1024];
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-				if(in!=null)
-					in.close();
-				if(writer!=null)
-					writer.close();
-			}
-        }
-
-		if (fornative) {
-			System.load(extractedLibFile.toString());			
-		}
+		super.addLoadLibs(isreload);
 	}
 
 	public native byte[] getMacAddr(String dev);

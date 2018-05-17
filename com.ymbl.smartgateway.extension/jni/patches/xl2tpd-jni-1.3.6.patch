@@ -1,0 +1,11 @@
+--- xl2tpd/Makefile
++++ xl2tpd/Makefile
+@@ -119,7 +119,7 @@ $(CONTROL_EXEC): $(CONTROL_SRCS)
+ 
+ pfc:
+ 	$(CC) $(CFLAGS) -c contrib/pfc.c
+-	$(CC) $(LDFLAGS) -o pfc pfc.o -lpcap $(LDLIBS)
++	$(CC) $(LDFLAGS) -o pfc pfc.o -static -lpcap $(LDLIBS)
+ 
+ romfs:
+ 	$(ROMFSINST) /bin/$(EXEC)
