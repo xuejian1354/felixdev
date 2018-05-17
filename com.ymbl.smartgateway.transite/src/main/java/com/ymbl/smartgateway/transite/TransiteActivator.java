@@ -32,7 +32,9 @@ import java.util.Iterator;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import com.ymbl.smartgateway.extension.IpTables;
+//import java.util.StringTokenizer;
+
+//import com.ymbl.smartgateway.extension.IpTables;
 import com.ymbl.smartgateway.extension.RedirectToSocks5Service;
 import com.ymbl.smartgateway.transite.log.SystemLogger;
 
@@ -40,7 +42,9 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 
 	public final static String CLASSNAME = TransiteActivator.class.getName();
 	public final static String defaultName = "trans-plugin";
-	private static int redirectPort = 0;
+	private int redirectPort = 0;
+	private String proxyHost = "0.0.0.0:1080";
+	private String socksAuth = null;
 
 	@Override
 	protected void doStart() throws Exception {
@@ -70,21 +74,40 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 				SystemLogger.info("get RedirectPort error");
 				return;
 			}
+
+			String proxyHostStr = resource.getString("ProxyHost");
+			if (proxyHostStr != null && proxyHostStr.length() > 0) {
+				proxyHost = proxyHostStr;
+			}
+
+			String authstr = resource.getString("ProxyAuth");
+			if(authstr != null && authstr.length() > 0) {
+				socksAuth = authstr;
+			}
+
+			/*IpTables iptables = IpTables.instance();
+			String RedirectTables = resource.getString("RedirectTables");
+			StringTokenizer retabtoken = new StringTokenizer(RedirectTables, ";");
+			while (retabtoken.hasMoreElements()) {
+				 String[] rehost = retabtoken.nextToken().split(":");
+				 if (rehost.length > 2) {
+					 iptables.rule("iptables -t nat -I PREROUTING -p tcp -d " 
+							 + rehost[0] + " --dport " + rehost[1] 
+							 + " -j REDIRECT --to " + redirectPort);
+				}
+			}
+			iptables.rule("iptables -t nat -nvL PREROUTING");*/
+
+			RedirectToSocks5Service rectservice = RedirectToSocks5Service.instance();
+			rectservice.start(redirectPort, proxyHost, socksAuth);
+			//rectservice.stop();
+			//startSelectListen(redirectPort);
 		} catch (MissingResourceException e) {
 			// TODO: handle exception
 			e.printStackTrace();
 		} finally {
 			SystemLogger.info("Plugin Name: " + plugName);
 		}
-
-		IpTables iptables = IpTables.instance();
-		//iptables.rule("iptables -t nat -I PREROUTING -p tcp -d 192.168.1.3 --dport 8088 -j REDIRECT --to 8011");
-		iptables.rule("iptables -t nat -nvL PREROUTING");
-
-		RedirectToSocks5Service rectservice = RedirectToSocks5Service.instance();
-		rectservice.start(8011, "192.168.1.3", 5000, "root:loong1354");
-		//rectservice.stop();
-		//startSelectListen(redirectPort);
 	}
 
 	public void startSelectListen(int port) {

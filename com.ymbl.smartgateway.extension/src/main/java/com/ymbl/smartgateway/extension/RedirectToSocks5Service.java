@@ -76,6 +76,6 @@ public class RedirectToSocks5Service {
 		}
 	}
 
-	public native void start(int redirectPort, String proxyIp, int proxyPort, String Auth);
+	public native void start(int redirectPort, String proxyHost, String Auth);
 	public native void stop();
 }

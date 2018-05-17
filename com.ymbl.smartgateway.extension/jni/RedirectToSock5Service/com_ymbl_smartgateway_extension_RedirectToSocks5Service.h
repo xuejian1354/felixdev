@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     com_ymbl_smartgateway_extension_RedirectToSocks5Service
  * Method:    start
- * Signature: (Ljava/lang/String;IILjava/lang/String;)V
+ * Signature: (ILjava/lang/String;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_com_ymbl_smartgateway_extension_RedirectToSocks5Service_start
-  (JNIEnv *, jobject, jint, jstring, jint, jstring);
+  (JNIEnv *, jobject, jint, jstring, jstring);
 
 /*
  * Class:     com_ymbl_smartgateway_extension_RedirectToSocks5Service

@@ -75,18 +75,15 @@ public:
 private:
 	void freeBufferEvent(bufferevent *&bev, bool withShutdown) {
 		if (bev != NULL) {
-			if (withShutdown) {
+			if (withShutdown)
 				shutdown(bufferevent_getfd(bev), SHUT_RDWR);
-				bufferevent_free(bev);
-				bev = NULL;
-			}
+			bufferevent_free(bev);
+			bev = NULL;
 		}
 	}
 
 	unsigned char state_;
-
 	unsigned short dstPort_;
-	
 	unsigned dstIp_;
 
 	bufferevent *bevSocks5_;

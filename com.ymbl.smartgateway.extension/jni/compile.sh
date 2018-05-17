@@ -35,6 +35,7 @@ do
   cd $i
   [ ! -x "configure" ] && ./autogen.sh && \
    ./configure --prefix=${PRETARGET} --host=arm-develop-linux-gnueabi CXXFLAGS=-I${EXDIR}/$i/extra/include LDFLAGS=-L${EXDIR}/$i/extra/lib/arm-develop
+#   ./configure --prefix=${PRETARGET} --host=mips-en751221-linux-gnu CXXFLAGS=-I${EXDIR}/$i/extra/include LDFLAGS=-L${EXDIR}/$i/extra/lib/mips-en751221
 #   ./configure --prefix=${PRETARGET}
 
   make && make install
