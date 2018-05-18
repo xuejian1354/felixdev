@@ -29,10 +29,10 @@ public class LoadLib {
 	}
 
 	public void addLoadLibs(boolean isreload) throws IOException {
-		loadLib(LoadLib.class.getSimpleName()+".so", "/tmp/transite-target/lib", true, isreload);
+		loadFileFromJAR(LoadLib.class.getSimpleName()+".so", "/tmp/transite-target/lib", true, isreload);
 	}
 
-	protected synchronized static void loadLib(String libName, String targetDir, boolean fornative, boolean isreload) throws IOException {
+	protected synchronized static void loadFileFromJAR(String libName, String targetDir, boolean fornative, boolean isreload) throws IOException {
 
 		InputStream in = null;
 		BufferedInputStream reader = null;

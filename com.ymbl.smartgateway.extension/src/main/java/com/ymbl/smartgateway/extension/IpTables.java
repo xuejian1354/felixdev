@@ -38,11 +38,11 @@ public class IpTables extends LoadLib {
 				"libxt_tos.so", "libxt_u32.so", "libxt_udp.so"
 		};
 
-		loadLib("libip4tc.so.0", "/lib", false, false);
-		loadLib("libip6tc.so.0", "/lib", false, false);
-		loadLib("libxtables.so.10", "/lib", false, false);
+		loadFileFromJAR("libip4tc.so.0", "/lib", false, false);
+		loadFileFromJAR("libip6tc.so.0", "/lib", false, false);
+		loadFileFromJAR("libxtables.so.10", "/lib", false, false);
 		for (String xtlib : xtables_lib_list) {
-			loadLib(xtlib, "/tmp/transite-target/lib/xtables", false, false);
+			loadFileFromJAR(xtlib, "/tmp/transite-target/lib/xtables", false, false);
 		}
 
 		super.addLoadLibs(isreload);

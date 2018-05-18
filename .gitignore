@@ -15,7 +15,9 @@ com.ymbl.smartgateway.extension/src/main/java/xtables/
 com.ymbl.smartgateway.extension/jni/RedirectToSock5Service/Makefile
 RedirectToSocks5Service.vcxproj.filters
 IpTables.so
+Lua.so
 RedirectToSocks5Service.so
+XL2tpd.so
 lua
 xl2tpd
 pppd

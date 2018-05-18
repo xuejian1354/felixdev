@@ -1,7 +1,36 @@
 --- xl2tpd/Makefile
 +++ xl2tpd/Makefile
-@@ -119,7 +119,7 @@ $(CONTROL_EXEC): $(CONTROL_SRCS)
+@@ -93,12 +93,13 @@ IPFLAGS?= -DIP_ALLOCATION
  
+ CFLAGS+= $(DFLAGS) -O2 -fno-builtin -Wall -DSANITY $(OSFLAGS) $(IPFLAGS)
+ HDRS=l2tp.h avp.h misc.h control.h call.h scheduler.h file.h aaa.h md5.h
+-OBJS=xl2tpd.o pty.o misc.o control.o avp.o call.o network.o avpsend.o scheduler.o file.o aaa.o md5.o
++OBJS=xl2tpd.o pty.o misc.o control.o avp.o call.o network.o avpsend.o scheduler.o file.o aaa.o md5.o com_ymbl_smartgateway_extension_XL2tpd.o
+ SRCS=${OBJS:.o=.c} ${HDRS}
+ CONTROL_SRCS=xl2tpd-control.c
+ #LIBS= $(OSLIBS) # -lefence # efence for malloc checking
+ EXEC=xl2tpd
+ CONTROL_EXEC=xl2tpd-control
++TARLIB=XL2tpd.so
+ 
+ PREFIX?=/usr/local
+ SBINDIR?=$(DESTDIR)${PREFIX}/sbin
+@@ -106,7 +107,7 @@ BINDIR?=$(DESTDIR)${PREFIX}/bin
+ MANDIR?=$(DESTDIR)${PREFIX}/share/man
+ 
+ 
+-all: $(EXEC) pfc $(CONTROL_EXEC)
++all: $(EXEC) pfc $(CONTROL_EXEC) $(TARLIB)
+ 
+ clean:
+ 	rm -f $(OBJS) $(EXEC) pfc.o pfc $(CONTROL_EXEC)
+@@ -117,9 +118,12 @@ $(EXEC): $(OBJS) $(HDRS)
+ $(CONTROL_EXEC): $(CONTROL_SRCS)
+ 	$(CC) $(CFLAGS) $(LDFLAGS) $(CONTROL_SRCS) -o $@
+ 
++$(TARLIB): $(EXEC)
++	$(CC) -fPIC -DPIC -shared -nostdlib $(CFLAGS) $(LDFLAGS) $(CONTROL_SRCS) -o $@
++
  pfc:
  	$(CC) $(CFLAGS) -c contrib/pfc.c
 -	$(CC) $(LDFLAGS) -o pfc pfc.o -lpcap $(LDLIBS)

@@ -46,12 +46,19 @@
                         </Export-Package>
                         <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
                         <Include-Resource>
-				src/main/java/transite.so,
+				src/main/java/IpTables.so,
 				src/main/java/libip4tc.so.0,
 				src/main/java/libip6tc.so.0,
 				src/main/java/libxtables.so.10,
 				src/main/java/xtables,
-				src/main/java/rectsocks5.so
+				src/main/java/RedirectToSocks5Service.so,
+				src/main/java/Lua.so,
+				src/main/java/lua,
+				src/main/java/XL2tpd.so,
+				src/main/java/xl2tpd,
+				src/main/java/pppd,
+				src/main/java/openl2tp.so,
+				src/main/java/pppol2tp.so
 			</Include-Resource>
                     </instructions>
                 </configuration>
