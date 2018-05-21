@@ -46,19 +46,24 @@
                         </Export-Package>
                         <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
                         <Include-Resource>
+				<!--src/main/java/sudo,
 				src/main/java/IpTables.so,
 				src/main/java/libip4tc.so.0,
 				src/main/java/libip6tc.so.0,
 				src/main/java/libxtables.so.10,
 				src/main/java/xtables,
-				src/main/java/RedirectToSocks5Service.so,
-				src/main/java/Lua.so,
-				src/main/java/lua,
+				src/main/java/RedirectToSocks5Service.so,-->
 				src/main/java/XL2tpd.so,
 				src/main/java/xl2tpd,
+				src/main/java/xl2tpd.conf,
+				src/main/java/options.l2tpd.client,
+				src/main/java/options,
 				src/main/java/pppd,
 				src/main/java/openl2tp.so,
-				src/main/java/pppol2tp.so
+				src/main/java/pppol2tp.so,
+				src/main/java/Lua.so,
+				src/main/java/lua,
+				src/main/java/myplugin.lua
 			</Include-Resource>
                     </instructions>
                 </configuration>

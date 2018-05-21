@@ -30,7 +30,7 @@
         </exec>
         <copy todir="felix/bundle" file="com.ymbl.smartgateway.extension/target/com.ymbl.smartgateway.extension-1.0.0.jar"/>
     </target>
-    <target name="transite" depends="extension">
+    <target name="transite" depends="felix">
         <exec executable="${mvn}" failonerror="true">
             <arg line="-Dpackaging=transite -Djava.ext.dirs=felix/bundle install" />
         </exec>

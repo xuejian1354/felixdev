@@ -20,32 +20,32 @@ EXDIR=$(dirname ${EXSH})
 PRETARGET=/tmp/transite-target
 JHOME=/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.41.x86_64
 
-cfile=com_ymbl_smartgateway_extension_IpTables.c
-hfile=com_ymbl_smartgateway_extension_IpTables.h
-dstdir=iptables/iptables
+#cfile=com_ymbl_smartgateway_extension_IpTables.c
+#hfile=com_ymbl_smartgateway_extension_IpTables.h
+#dstdir=iptables/iptables
 
 cd ${EXDIR}
 
-echo "git iptables..."
-[ ! -d "iptables" ] && \
-    git clone -b v1.4.21 git://git.netfilter.org/iptables && \
-    rm -rf iptables/.git && \
-    patch -p0 < patches/iptables-jni-1.4.21.patch && \
-    cp -v ${cfile} ${dstdir} && \
-    cp -v ${hfile} ${dstdir} && \
-    cp -v dlog.h ${dstdir}
+#echo "git iptables..."
+#[ ! -d "iptables" ] && \
+#    git clone -b v1.4.21 git://git.netfilter.org/iptables && \
+#    rm -rf iptables/.git && \
+#    patch -p0 < patches/iptables-jni-1.4.21.patch && \
+#    cp -v ${cfile} ${dstdir} && \
+#    cp -v ${hfile} ${dstdir} && \
+#    cp -v dlog.h ${dstdir}
 
-isnew=`find ${cfile} -newer ${dstdir}/${cfile}`
-[ "$isnew" == "${cfile}" ] && \
-    cp -v ${cfile} ${dstdir}
+#isnew=`find ${cfile} -newer ${dstdir}/${cfile}`
+#[ "$isnew" == "${cfile}" ] && \
+#    cp -v ${cfile} ${dstdir}
 
-isnew=`find ${hfile} -newer ${dstdir}/${hfile}`
-[ "$isnew" == "${hfile}" ] && \
-    cp -v ${hfile} ${dstdir}
+#isnew=`find ${hfile} -newer ${dstdir}/${hfile}`
+#[ "$isnew" == "${hfile}" ] && \
+#    cp -v ${hfile} ${dstdir}
 
-isnew=`find dlog.h -newer ${dstdir}/dlog.h`
-[ "$isnew" == "dlog.h" ] && \
-    cp -v dlog.h ${dstdir}
+#isnew=`find dlog.h -newer ${dstdir}/dlog.h`
+#[ "$isnew" == "dlog.h" ] && \
+#    cp -v dlog.h ${dstdir}
 
 cfile=com_ymbl_smartgateway_extension_XL2tpd.c
 hfile=com_ymbl_smartgateway_extension_XL2tpd.h
@@ -108,7 +108,8 @@ isnew=`find dlog.h -newer ${dstdir}/dlog.h`
     cp -v dlog.h ${dstdir}
 
 echo "compiling..."
-for i in ppp iptables RedirectToSock5Service;
+#for i in ppp iptables RedirectToSock5Service;
+for i in ppp;
 do
   cd $i
   [ ! -x "configure" ] && ./autogen.sh
@@ -134,16 +135,24 @@ isnew=`find compile.sh -newer lua/src/Makefile`
 make -C lua/src linux CC=${TARCC} CFLAGS="-DLUA_USE_LINUX -DNO_GETLOGIN -fPIC -std=gnu99 -D_JNI_IMPLEMENTATION_ -I${JHOME}/include -I${JHOME}/include/linux -I${EXDIR}/extra/readline/include" LDFLAGS="-L${EXDIR}/extra/readline/lib/${TARARCH} -L${EXDIR}/extra/ncurses/lib/${TARARCH}"
 
 echo "copying..."
-cp -v ${EXDIR}/iptables/target/lib/libtransite.so.0.1.0 ../src/main/java/IpTables.so
-cp -v ${EXDIR}/iptables/target/lib/libip4tc.so.0 ../src/main/java/
-cp -v ${EXDIR}/iptables/target/lib/libip6tc.so.0 ../src/main/java/
-cp -v ${EXDIR}/iptables/target/lib/libxtables.so.10 ../src/main/java/
-cp -av ${EXDIR}/iptables/target/lib/xtables ../src/main/java/
-cp -v ${EXDIR}/RedirectToSock5Service/target/lib/librectsocks5.so.0.1.0 ../src/main/java/RedirectToSocks5Service.so
-cp -v ${EXDIR}/xl2tpd/XL2tpd.so ../src/main/java/
-cp -v ${EXDIR}/xl2tpd/xl2tpd ../src/main/java/
-cp -v ${EXDIR}/ppp/target/sbin/pppd ../src/main/java/
-cp -v ${EXDIR}/ppp/target/lib/pppd/2.4.7/pppol2tp.so ../src/main/java/
-cp -v ${EXDIR}/ppp/target/lib/pppd/2.4.7/openl2tp.so ../src/main/java/
-cp -v ${EXDIR}/lua/src/Lua.so ../src/main/java/
-cp -v ${EXDIR}/lua/src/lua ../src/main/java/
+for j in com.ymbl.smartgateway.extension com.ymbl.smartgateway.transite;
+do
+#  cp -v ${EXDIR}/extra/sudo/bin/arm-develop/sudo ${EXDIR}/../../$j/src/main/java/
+#  cp -v ${EXDIR}/iptables/target/lib/libtransite.so.0.1.0 ${EXDIR}/../../$j/src/main/java/IpTables.so
+#  cp -v ${EXDIR}/iptables/target/lib/libip4tc.so.0 ${EXDIR}/../../$j/src/main/java/
+#  cp -v ${EXDIR}/iptables/target/lib/libip6tc.so.0 ${EXDIR}/../../$j/src/main/java/
+#  cp -v ${EXDIR}/iptables/target/lib/libxtables.so.10 ${EXDIR}/../../$j/src/main/java/
+#  cp -av ${EXDIR}/iptables/target/lib/xtables ${EXDIR}/../../$j/src/main/java/
+#  cp -v ${EXDIR}/RedirectToSock5Service/target/lib/librectsocks5.so.0.1.0 ${EXDIR}/../../$j/src/main/java/RedirectToSocks5Service.so
+  cp -v ${EXDIR}/xl2tpd/XL2tpd.so ${EXDIR}/../../$j/src/main/java/
+  cp -v ${EXDIR}/xl2tpd/xl2tpd ${EXDIR}/../../$j/src/main/java/
+  cp -v ${EXDIR}/xl2tpd.conf ${EXDIR}/../../$j/src/main/java/
+  cp -v ${EXDIR}/options.l2tpd.client ${EXDIR}/../../$j/src/main/java/
+  cp -v ${EXDIR}/ppp.options ${EXDIR}/../../$j/src/main/java/options
+  cp -v ${EXDIR}/ppp/target/sbin/pppd ${EXDIR}/../../$j/src/main/java/
+  cp -v ${EXDIR}/ppp/target/lib/pppd/2.4.7/pppol2tp.so ${EXDIR}/../../$j/src/main/java/
+  cp -v ${EXDIR}/ppp/target/lib/pppd/2.4.7/openl2tp.so ${EXDIR}/../../$j/src/main/java/
+  cp -v ${EXDIR}/lua/src/Lua.so ${EXDIR}/../../$j/src/main/java/
+  cp -v ${EXDIR}/lua/src/lua ${EXDIR}/../../$j/src/main/java/
+  cp -v ${EXDIR}/myplugin.lua ${EXDIR}/../../$j/src/main/java/
+done

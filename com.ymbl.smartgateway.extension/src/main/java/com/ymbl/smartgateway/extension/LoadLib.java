@@ -5,35 +5,31 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.SocketException;
+import java.util.ResourceBundle;
 
-public class LoadLib {
+import org.apache.commons.net.telnet.TelnetClient;
 
-	private static LoadLib myinstance = null;
+import com.ymbl.smartgateway.transite.log.SystemLogger;
 
-	protected LoadLib(){
-		try {
-			addLoadLibs(false);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+abstract public class LoadLib {
+	private String teluser = null;
+	private String telpass = null;
+
+	public void addLoadLibsForNative(boolean isreload) {
+		addLoadLibs(true, isreload);
 	}
 
-	public static LoadLib instance(){
-		if (myinstance == null) {
-			myinstance = new LoadLib();
-			System.out.println(LoadLib.class.getSimpleName() + " Instance ======>>>");
-		}
-
-		return myinstance;
+	public void addLoadLibsNoNative(boolean isreload) {
+		addLoadLibs(false, isreload);
 	}
 
-	public void addLoadLibs(boolean isreload) throws IOException {
-		loadFileFromJAR(LoadLib.class.getSimpleName()+".so", "/tmp/transite-target/lib", true, isreload);
-	}
+	abstract public void addLoadLibs(Boolean fornative, boolean isreload);
 
 	protected synchronized static void loadFileFromJAR(String libName, String targetDir, boolean fornative, boolean isreload) throws IOException {
-
+		int len;
 		InputStream in = null;
 		BufferedInputStream reader = null;
 		FileOutputStream writer = null;  
@@ -61,9 +57,8 @@ public class LoadLib {
 				writer = new FileOutputStream(extractedLibFile);
 
 				byte[] buffer = new byte[1024];
-				while (reader.read(buffer) > 0) {
-					writer.write(buffer);
-					buffer = new byte[1024];
+				while ((len=reader.read(buffer)) > 0) {
+					writer.write(buffer, 0, len);
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -78,5 +73,69 @@ public class LoadLib {
 		if (fornative) {
 			System.load(extractedLibFile.toString());			
 		}
+	}
+	
+	public void TelCommand(String cmd) throws SocketException, IOException {
+		ResourceBundle resource = ResourceBundle.getBundle("config");
+		if (teluser == null) {
+			teluser = resource.getString("TelnetUser");
+		}
+
+		if (telpass == null) {
+			telpass = resource.getString("TelnetPass");
+		}
+
+		TelnetClient tc = new TelnetClient("vt200");
+		tc.setDefaultTimeout(5000);
+		tc.connect("127.0.0.1", 23);
+		InputStream ins = tc.getInputStream();
+		OutputStream outs = tc.getOutputStream();
+		SystemLogger.info(readUtil(":", ins));
+		writeUtil(teluser, outs);
+		SystemLogger.info(readUtil(":", ins));
+		writeUtil(telpass, outs);
+		writeUtil("admin", outs);
+		String pass = readUtil(":", ins);
+		if (pass.length() < 1) {
+			return;
+		}
+		writeUtil(cmd, outs);
+		SystemLogger.info(readUtil("#", ins));
+		tc.disconnect();
+	}
+
+	public void writeUtil(String cmd, OutputStream os) throws IOException {
+		cmd = cmd +  "\n";
+		os.write(cmd.getBytes());
+		os.flush();
+	}
+
+	public String readUtil(String endFlag, InputStream in) throws IOException {
+		InputStreamReader isr = new InputStreamReader(in);
+		
+		char[] charBytes = new char[1024];
+		int n = 0;
+		boolean flag = false;
+		String str = "";
+		while ((n = isr.read(charBytes)) != -1) {
+			for (int i = 0; i < n; i++) {
+				char c = (char)charBytes[i];
+				str += c;
+				if (str.endsWith(endFlag)) {
+					flag = true;
+					break;
+				}
+			}
+
+			if (flag) {
+				break;
+			}
+		}
+
+		if (flag == false) {
+			str = "";
+		}
+
+		return str;
 	}
 }

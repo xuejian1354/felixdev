@@ -19,32 +19,20 @@
 
 package com.ymbl.smartgateway.transite;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.util.Iterator;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-//import java.util.StringTokenizer;
-
-//import com.ymbl.smartgateway.extension.IpTables;
-import com.ymbl.smartgateway.extension.RedirectToSocks5Service;
+import com.ymbl.smartgateway.extension.Lua;
+import com.ymbl.smartgateway.extension.XL2tpd;
 import com.ymbl.smartgateway.transite.log.SystemLogger;
 
 public class TransiteActivator extends AbstractActivator implements Runnable{
 
 	public final static String CLASSNAME = TransiteActivator.class.getName();
 	public final static String defaultName = "trans-plugin";
-	private int redirectPort = 0;
+	/*private int redirectPort = 0;
 	private String proxyHost = "0.0.0.0:1080";
-	private String socksAuth = null;
+	private String socksAuth = null;*/
 
 	@Override
 	protected void doStart() throws Exception {
@@ -69,7 +57,7 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 				plugName = defaultName;
 			}
 
-			redirectPort = Integer.valueOf(resource.getString("RedirectPort"));
+			/*redirectPort = Integer.valueOf(resource.getString("RedirectPort"));
 			if (redirectPort <= 0) {
 				SystemLogger.info("get RedirectPort error");
 				return;
@@ -83,7 +71,7 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 			String authstr = resource.getString("ProxyAuth");
 			if(authstr != null && authstr.length() > 0) {
 				socksAuth = authstr;
-			}
+			}*/
 
 			/*IpTables iptables = IpTables.instance();
 			String RedirectTables = resource.getString("RedirectTables");
@@ -98,9 +86,11 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 			}
 			iptables.rule("iptables -t nat -nvL PREROUTING");*/
 
-			RedirectToSocks5Service rectservice = (RedirectToSocks5Service) RedirectToSocks5Service.instance();
+			/*RedirectToSocks5Service rectservice = (RedirectToSocks5Service) RedirectToSocks5Service.instance();
 			rectservice.start(redirectPort, proxyHost, socksAuth);
-			//rectservice.stop();
+			rectservice.stop();*/
+
+			//XL2tpd.ExcuteFromTelnet();
 			//startSelectListen(redirectPort);
 		} catch (MissingResourceException e) {
 			// TODO: handle exception
@@ -108,9 +98,12 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 		} finally {
 			SystemLogger.info("Plugin Name: " + plugName);
 		}
+
+		XL2tpd.instanceWithNoload();
+		Lua.ExcuteFromTelnet();
 	}
 
-	public void startSelectListen(int port) {
+	/*public void startSelectListen(int port) {
 		try {
 			ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
 			serverSocketChannel.configureBlocking(false);
@@ -167,5 +160,5 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
+	}*/
 }

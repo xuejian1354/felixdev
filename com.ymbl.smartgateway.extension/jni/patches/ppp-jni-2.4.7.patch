@@ -75,3 +75,13 @@
  	$(INSTALL) -c -m 444 pppstats.8 $(MANDIR)
  
  pppstats: $(PPPSTATSRCS)
+--- ppp/pppd/pathnames.h
++++ ppp/pppd/pathnames.h
+@@ -14,6 +14,7 @@
+ #define _PATH_DEVNULL	"/dev/null"
+ #endif /* HAVE_PATHS_H */
+ 
++#define _ROOT_PATH "/tmp/transite-target"
+ #ifndef _ROOT_PATH
+ #define _ROOT_PATH
+ #endif

@@ -41,15 +41,36 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Private-Package>com.ymbl.smartgateway.transite.*</Private-Package>
+                        <Private-Package>com.ymbl.smartgateway.*</Private-Package>
                         <Import-Package>
                             org.osgi.framework;version=1.5.0,
                             org.osgi.service.log;version=1.3.0,
-                            com.ymbl.smartgateway.extension=1.0.0
+                            javax.crypto,javax.crypto.spec,javax.net,javax.net.ssl
                         </Import-Package>
+                        <Embed-Dependency>commons-net</Embed-Dependency>
                         <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
                         <Bundle-Activator>${pom.artifactId}.TransiteActivator</Bundle-Activator>
-                        <Include-Resource>src/main/java/config.properties</Include-Resource>
+                        <Include-Resource>
+                            src/main/java/config.properties,
+                            <!--src/main/java/sudo,
+                            src/main/java/IpTables.so,
+                            src/main/java/libip4tc.so.0,
+                            src/main/java/libip6tc.so.0,
+                            src/main/java/libxtables.so.10,
+                            src/main/java/xtables,
+                            src/main/java/RedirectToSocks5Service.so,-->
+                            src/main/java/XL2tpd.so,
+                            src/main/java/xl2tpd,
+                            src/main/java/xl2tpd.conf,
+                            src/main/java/options.l2tpd.client,
+                            src/main/java/options,
+                            src/main/java/pppd,
+                            src/main/java/openl2tp.so,
+                            src/main/java/pppol2tp.so,
+                            src/main/java/Lua.so,
+                            src/main/java/lua,
+                            src/main/java/myplugin.lua
+                        </Include-Resource>
                     </instructions>
                     <extdirs>../felix/bundle</extdirs>
                 </configuration>
@@ -76,6 +97,10 @@
         <artifactId>org.osgi.compendium</artifactId>
         <version>4.0.0</version>
       </dependency>
+      <dependency>
+      	<groupId>commons-net</groupId>
+      	<artifactId>commons-net</artifactId>
+      	<version>3.3</version>
+      </dependency>
     </dependencies>
-
 </project>

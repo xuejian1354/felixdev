@@ -29,7 +29,7 @@
  	$(CC) $(CFLAGS) $(LDFLAGS) $(CONTROL_SRCS) -o $@
  
 +$(TARLIB): $(EXEC)
-+	$(CC) -fPIC -DPIC -shared -nostdlib $(CFLAGS) $(LDFLAGS) $(CONTROL_SRCS) -o $@
++	$(CC) -fPIC -DPIC -shared -nostdlib $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
 +
  pfc:
  	$(CC) $(CFLAGS) -c contrib/pfc.c
@@ -38,3 +38,22 @@
  
  romfs:
  	$(ROMFSINST) /bin/$(EXEC)
+--- xl2tpd/l2tp.h
++++ xl2tpd/l2tp.h
+@@ -37,14 +37,14 @@ typedef unsigned long long _u64;
+ #include "common.h"
+ #include "ipsecmast.h"
+ 
+-#define CONTROL_PIPE "/var/run/xl2tpd/l2tp-control"
++#define CONTROL_PIPE "/tmp/transite-target/var/run/l2tp-control"
+ #define CONTROL_PIPE_MESSAGE_SIZE 1024
+ 
+ #define BINARY "xl2tpd"
+ #define SERVER_VERSION "xl2tpd-1.3.6"
+ #define VENDOR_NAME "xelerance.com"
+ #ifndef PPPD
+-#define PPPD		"/usr/sbin/pppd"
++#define PPPD		"/tmp/transite-target/bin/pppd"
+ #endif
+ #define CALL_PPP_OPTS "defaultroute"
+ #define FIRMWARE_REV	0x0690  /* Revision of our firmware (software, in this case) */

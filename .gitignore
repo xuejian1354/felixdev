@@ -11,8 +11,13 @@ com.ymbl.smartgateway.extension/jni/iptables/
 com.ymbl.smartgateway.extension/jni/xl2tpd/
 com.ymbl.smartgateway.extension/jni/ppp/
 com.ymbl.smartgateway.extension/jni/lua/
-com.ymbl.smartgateway.extension/src/main/java/xtables/
 com.ymbl.smartgateway.extension/jni/RedirectToSock5Service/Makefile
+/*/src/main/java/sudo
+/*/src/main/java/xtables/
+/*/src/main/java/options.l2tpd.client
+/*/src/main/java/xl2tpd.conf
+/*/src/main/java/options
+/*/src/main/java/myplugin.lua
 RedirectToSocks5Service.vcxproj.filters
 IpTables.so
 Lua.so
