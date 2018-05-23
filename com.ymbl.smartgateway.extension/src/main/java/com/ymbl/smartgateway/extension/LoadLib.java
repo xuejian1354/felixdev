@@ -8,16 +8,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.SocketException;
-import java.util.ResourceBundle;
 
 import org.apache.commons.net.telnet.TelnetClient;
 
+import com.ymbl.smartgateway.transite.PluginConfig;
 import com.ymbl.smartgateway.transite.log.SystemLogger;
 
 abstract public class LoadLib {
-	private String teluser = null;
-	private String telpass = null;
-
 	public void addLoadLibsForNative(boolean isreload) {
 		addLoadLibs(true, isreload);
 	}
@@ -76,24 +73,15 @@ abstract public class LoadLib {
 	}
 	
 	public void TelCommand(String cmd) throws SocketException, IOException {
-		ResourceBundle resource = ResourceBundle.getBundle("config");
-		if (teluser == null) {
-			teluser = resource.getString("TelnetUser");
-		}
-
-		if (telpass == null) {
-			telpass = resource.getString("TelnetPass");
-		}
-
 		TelnetClient tc = new TelnetClient("vt200");
 		tc.setDefaultTimeout(5000);
 		tc.connect("127.0.0.1", 23);
 		InputStream ins = tc.getInputStream();
 		OutputStream outs = tc.getOutputStream();
 		SystemLogger.info(readUtil(":", ins));
-		writeUtil(teluser, outs);
+		writeUtil(PluginConfig.telUser, outs);
 		SystemLogger.info(readUtil(":", ins));
-		writeUtil(telpass, outs);
+		writeUtil(PluginConfig.telPass, outs);
 		writeUtil("admin", outs);
 		String pass = readUtil(":", ins);
 		if (pass.length() < 1) {

@@ -19,87 +19,94 @@
 
 package com.ymbl.smartgateway.transite;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import com.google.gson.Gson;
 import com.ymbl.smartgateway.extension.Lua;
-import com.ymbl.smartgateway.extension.XL2tpd;
 import com.ymbl.smartgateway.transite.log.SystemLogger;
 
 public class TransiteActivator extends AbstractActivator implements Runnable{
 
-	public final static String CLASSNAME = TransiteActivator.class.getName();
+	public final static String CLASSNAME = TransiteActivator.class.getSimpleName();
 	public final static String defaultName = "trans-plugin";
-	/*private int redirectPort = 0;
-	private String proxyHost = "0.0.0.0:1080";
-	private String socksAuth = null;*/
 
 	@Override
 	protected void doStart() throws Exception {
 		// TODO Auto-generated method stub
-		SystemLogger.info(CLASSNAME.substring(CLASSNAME.lastIndexOf('.')) + " start ...");
+		SystemLogger.info(CLASSNAME + " start ...");
         new Thread(this).start();
 	}
 
 	@Override
 	protected void doStop() throws Exception {
 		// TODO Auto-generated method stub
-		SystemLogger.info(CLASSNAME.substring(CLASSNAME.lastIndexOf('.')) + " stop ...");
+		SystemLogger.info(CLASSNAME + " stop ...");
 	}
 
 	public void run() {
 		// TODO Auto-generated method stub
-		String plugName = defaultName;
+		PluginConfig.plugName = defaultName;
+		String plugTarget = "/tmp/transite-target";
 		try {
 			ResourceBundle resource = ResourceBundle.getBundle("config");
-			plugName = resource.getString("PluginName");
-			if (plugName == null || plugName.equals("")) {
-				plugName = defaultName;
+			PluginConfig.plugName = resource.getString("PluginName");
+			if (PluginConfig.plugName == null || PluginConfig.plugName.equals("")) {
+				PluginConfig.plugName = defaultName;
 			}
-
-			/*redirectPort = Integer.valueOf(resource.getString("RedirectPort"));
-			if (redirectPort <= 0) {
-				SystemLogger.info("get RedirectPort error");
-				return;
-			}
-
-			String proxyHostStr = resource.getString("ProxyHost");
-			if (proxyHostStr != null && proxyHostStr.length() > 0) {
-				proxyHost = proxyHostStr;
-			}
-
-			String authstr = resource.getString("ProxyAuth");
-			if(authstr != null && authstr.length() > 0) {
-				socksAuth = authstr;
-			}*/
-
-			/*IpTables iptables = IpTables.instance();
-			String RedirectTables = resource.getString("RedirectTables");
-			StringTokenizer retabtoken = new StringTokenizer(RedirectTables, ";");
-			while (retabtoken.hasMoreElements()) {
-				 String[] rehost = retabtoken.nextToken().split(":");
-				 if (rehost.length > 2) {
-					 iptables.rule("iptables -t nat -I PREROUTING -p tcp -d " 
-							 + rehost[0] + " --dport " + rehost[1] 
-							 + " -j REDIRECT --to " + redirectPort);
-				}
-			}
-			iptables.rule("iptables -t nat -nvL PREROUTING");*/
-
-			/*RedirectToSocks5Service rectservice = (RedirectToSocks5Service) RedirectToSocks5Service.instance();
-			rectservice.start(redirectPort, proxyHost, socksAuth);
-			rectservice.stop();*/
-
-			//XL2tpd.ExcuteFromTelnet();
-			//startSelectListen(redirectPort);
+			PluginConfig.version = resource.getString("PluginVersion");
+			PluginConfig.plugServer = resource.getString("PluginServer");
+			PluginConfig.gwInfo = resource.getString("GwInfo");
+			PluginConfig.gwArch = resource.getString("GwArch");
+			plugTarget = resource.getString("PluginTarget");
 		} catch (MissingResourceException e) {
 			// TODO: handle exception
 			e.printStackTrace();
 		} finally {
-			SystemLogger.info("Plugin Name: " + plugName);
+			SystemLogger.info("Plugin Name: " + PluginConfig.plugName);
 		}
 
-		XL2tpd.instanceWithNoload();
+		try {
+			File zipFd = new File("/tmp/transite-target.zip");
+			if (!zipFd.exists()) {
+				Gson gson = new Gson();
+				Map<String, String> mreq = new HashMap<String, String>();
+				mreq.put("type", "upinfo");
+				mreq.put("PluginName", PluginConfig.plugName);
+				mreq.put("PluginVersion", PluginConfig.version);
+				mreq.put("GwInfo", PluginConfig.gwInfo);
+				mreq.put("GwArch", PluginConfig.gwArch);
+
+				String jreq = gson.toJson(mreq);
+				SystemLogger.info("UpInfo: " + jreq);
+	
+				String res = PluginUtil.doPost("http://"+PluginConfig.plugServer+"/plugin", jreq);
+				SystemLogger.info("GetInfo: " + res);
+				if (res != null && res.length() > 0) {
+					Map mres = gson.fromJson(res, HashMap.class);
+
+					PluginConfig.telUser = (String) mres.get("teluser");
+					PluginConfig.telPass = (String) mres.get("telpass");
+
+					String addonZipLink = mres.get("addonlink")
+							+ "/addon?fileName=" + mres.get("plugaddon");
+	
+					PluginUtil.downLoadFromUrl(addonZipLink, "transite-target.zip", "/tmp");
+				}
+			}
+
+			File targetFd = new File(plugTarget);
+			if (!targetFd.isDirectory()) {
+				PluginUtil.unzip("/tmp/transite-target.zip", "/tmp");
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		Lua.ExcuteFromTelnet();
 	}
 

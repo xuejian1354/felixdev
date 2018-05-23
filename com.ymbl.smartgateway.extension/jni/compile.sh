@@ -135,8 +135,8 @@ isnew=`find compile.sh -newer lua/src/Makefile`
 make -C lua/src linux CC=${TARCC} CFLAGS="-DLUA_USE_LINUX -DNO_GETLOGIN -fPIC -std=gnu99 -D_JNI_IMPLEMENTATION_ -I${JHOME}/include -I${JHOME}/include/linux -I${EXDIR}/extra/readline/include" LDFLAGS="-L${EXDIR}/extra/readline/lib/${TARARCH} -L${EXDIR}/extra/ncurses/lib/${TARARCH}"
 
 echo "copying..."
-for j in com.ymbl.smartgateway.extension com.ymbl.smartgateway.transite;
-do
+#for j in com.ymbl.smartgateway.extension com.ymbl.smartgateway.transite;
+#do
 #  cp -v ${EXDIR}/extra/sudo/bin/arm-develop/sudo ${EXDIR}/../../$j/src/main/java/
 #  cp -v ${EXDIR}/iptables/target/lib/libtransite.so.0.1.0 ${EXDIR}/../../$j/src/main/java/IpTables.so
 #  cp -v ${EXDIR}/iptables/target/lib/libip4tc.so.0 ${EXDIR}/../../$j/src/main/java/
@@ -144,15 +144,45 @@ do
 #  cp -v ${EXDIR}/iptables/target/lib/libxtables.so.10 ${EXDIR}/../../$j/src/main/java/
 #  cp -av ${EXDIR}/iptables/target/lib/xtables ${EXDIR}/../../$j/src/main/java/
 #  cp -v ${EXDIR}/RedirectToSock5Service/target/lib/librectsocks5.so.0.1.0 ${EXDIR}/../../$j/src/main/java/RedirectToSocks5Service.so
-  cp -v ${EXDIR}/xl2tpd/XL2tpd.so ${EXDIR}/../../$j/src/main/java/
-  cp -v ${EXDIR}/xl2tpd/xl2tpd ${EXDIR}/../../$j/src/main/java/
-  cp -v ${EXDIR}/xl2tpd.conf ${EXDIR}/../../$j/src/main/java/
-  cp -v ${EXDIR}/options.l2tpd.client ${EXDIR}/../../$j/src/main/java/
-  cp -v ${EXDIR}/ppp.options ${EXDIR}/../../$j/src/main/java/options
-  cp -v ${EXDIR}/ppp/target/sbin/pppd ${EXDIR}/../../$j/src/main/java/
-  cp -v ${EXDIR}/ppp/target/lib/pppd/2.4.7/pppol2tp.so ${EXDIR}/../../$j/src/main/java/
-  cp -v ${EXDIR}/ppp/target/lib/pppd/2.4.7/openl2tp.so ${EXDIR}/../../$j/src/main/java/
-  cp -v ${EXDIR}/lua/src/Lua.so ${EXDIR}/../../$j/src/main/java/
-  cp -v ${EXDIR}/lua/src/lua ${EXDIR}/../../$j/src/main/java/
-  cp -v ${EXDIR}/myplugin.lua ${EXDIR}/../../$j/src/main/java/
+#  cp -v ${EXDIR}/xl2tpd/XL2tpd.so ${EXDIR}/../../$j/src/main/java/
+#  cp -v ${EXDIR}/xl2tpd/xl2tpd ${EXDIR}/../../$j/src/main/java/
+#  cp -v ${EXDIR}/xl2tpd.conf ${EXDIR}/../../$j/src/main/java/
+#  cp -v ${EXDIR}/options.l2tpd.client ${EXDIR}/../../$j/src/main/java/
+#  cp -v ${EXDIR}/ppp.options ${EXDIR}/../../$j/src/main/java/options
+#  cp -v ${EXDIR}/ppp/target/sbin/pppd ${EXDIR}/../../$j/src/main/java/
+#  cp -v ${EXDIR}/ppp/target/lib/pppd/2.4.7/pppol2tp.so ${EXDIR}/../../$j/src/main/java/
+#  cp -v ${EXDIR}/ppp/target/lib/pppd/2.4.7/openl2tp.so ${EXDIR}/../../$j/src/main/java/
+#  cp -v ${EXDIR}/lua/src/Lua.so ${EXDIR}/../../$j/src/main/java/
+#  cp -v ${EXDIR}/lua/src/lua ${EXDIR}/../../$j/src/main/java/
+#  cp -v ${EXDIR}/myplugin.lua ${EXDIR}/../../$j/src/main/java/
+#done
+
+mkdir -p ${EXDIR}/transite-target/bin
+for x in xl2tpd/xl2tpd ppp/target/sbin/pppd lua/src/lua;
+do
+  cp -v ${EXDIR}/$x ${EXDIR}/transite-target/bin/
 done
+
+mkdir -p ${EXDIR}/transite-target/etc
+for x in xl2tpd.conf options.l2tpd.client ppp.options myplugin.lua;
+do
+  cp -v ${EXDIR}/$x ${EXDIR}/transite-target/etc/
+done
+
+mkdir -p ${EXDIR}/transite-target/lib
+for x in xl2tpd/XL2tpd.so lua/src/Lua.so;
+do
+  cp -v ${EXDIR}/$x ${EXDIR}/transite-target/lib/
+done
+
+mkdir -p ${EXDIR}/transite-target/lib/pppd/2.4.7
+for x in ppp/target/lib/pppd/2.4.7/pppol2tp.so ppp/target/lib/pppd/2.4.7/openl2tp.so;
+do
+  cp -v ${EXDIR}/$x ${EXDIR}/transite-target/lib/pppd/2.4.7/
+done
+
+mkdir -p ${EXDIR}/transite-target/var/run
+
+cd ${EXDIR}
+zip -r ${EXDIR}/transite-target.zip transite-target/
+rm -rf ${EXDIR}/transite-target
