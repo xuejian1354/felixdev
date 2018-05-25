@@ -9,6 +9,14 @@ extern "C" {
 #endif
 /*
  * Class:     com_ymbl_smartgateway_extension_Lua
+ * Method:    getMacAddr
+ * Signature: (Ljava/lang/String;)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_com_ymbl_smartgateway_extension_Lua_getMacAddr
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     com_ymbl_smartgateway_extension_Lua
  * Method:    exec
  * Signature: (Ljava/lang/String;)V
  */

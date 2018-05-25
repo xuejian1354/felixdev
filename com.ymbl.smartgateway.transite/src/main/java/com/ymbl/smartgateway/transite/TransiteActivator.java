@@ -19,13 +19,22 @@
 
 package com.ymbl.smartgateway.transite;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import com.google.gson.Gson;
+import com.google.gson.internal.LinkedTreeMap;
 import com.ymbl.smartgateway.extension.Lua;
 import com.ymbl.smartgateway.transite.log.SystemLogger;
 
@@ -33,6 +42,10 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 
 	public final static String CLASSNAME = TransiteActivator.class.getSimpleName();
 	public final static String defaultName = "trans-plugin";
+
+	private Map mpulse;
+	private String macaddr = "00:00:00:00:00:00";
+	private Timer timer = null;
 
 	@Override
 	protected void doStart() throws Exception {
@@ -45,6 +58,9 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 	protected void doStop() throws Exception {
 		// TODO Auto-generated method stub
 		SystemLogger.info(CLASSNAME + " stop ...");
+		if (timer != null) {
+			timer.cancel();
+		}
 	}
 
 	public void run() {
@@ -62,6 +78,8 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 			PluginConfig.gwInfo = resource.getString("GwInfo");
 			PluginConfig.gwArch = resource.getString("GwArch");
 			plugTarget = resource.getString("PluginTarget");
+			PluginConfig.timer = Integer.parseInt(resource.getString("Timer"));
+			PluginConfig.macdev = resource.getString("MacDev");
 		} catch (MissingResourceException e) {
 			// TODO: handle exception
 			e.printStackTrace();
@@ -70,102 +88,148 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 		}
 
 		try {
-			File zipFd = new File("/tmp/transite-target.zip");
-			if (!zipFd.exists()) {
-				Gson gson = new Gson();
-				Map<String, String> mreq = new HashMap<String, String>();
-				mreq.put("type", "upinfo");
-				mreq.put("PluginName", PluginConfig.plugName);
-				mreq.put("PluginVersion", PluginConfig.version);
-				mreq.put("GwInfo", PluginConfig.gwInfo);
-				mreq.put("GwArch", PluginConfig.gwArch);
+			Gson gson = new Gson();
+			Map mreq = new HashMap();
+			mreq.put("id", "1");
+			mreq.put("jsonrpc", "2.0");
+			mreq.put("method", "plugin");
 
-				String jreq = gson.toJson(mreq);
-				SystemLogger.info("UpInfo: " + jreq);
-	
-				String res = PluginUtil.doPost("http://"+PluginConfig.plugServer+"/plugin", jreq);
-				SystemLogger.info("GetInfo: " + res);
-				if (res != null && res.length() > 0) {
-					Map mres = gson.fromJson(res, HashMap.class);
+			Map mdata = new HashMap();
+			mdata.put("type", "upinfo");
+			mdata.put("pluginname", PluginConfig.plugName);
+			mdata.put("pluginversion", PluginConfig.version);
+			mdata.put("gwinfo", PluginConfig.gwInfo);
+			mdata.put("gwarch", PluginConfig.gwArch);
+			List mparams = new ArrayList();
+			mparams.add(gson.toJson(mdata));
+			mreq.put("params", mparams);
 
-					PluginConfig.telUser = (String) mres.get("teluser");
-					PluginConfig.telPass = (String) mres.get("telpass");
+			String jreq = gson.toJson(mreq);
+			SystemLogger.info("UpInfo: " + jreq);
 
-					String addonZipLink = mres.get("addonlink")
-							+ "/addon?fileName=" + mres.get("plugaddon");
-	
+			String res = PluginUtil.doPost("http://"+PluginConfig.plugServer+"/jsonRpc", jreq);
+			SystemLogger.info("GetInfo: " + res);
+			if (res != null && res.length() > 0) {
+				Map mres = gson.fromJson(res, HashMap.class);
+				Map mresult = (LinkedTreeMap)mres.get("result");
+
+				PluginConfig.telUser = (String) mresult.get("teluser");
+				PluginConfig.telPass = (String) mresult.get("telpass");
+
+				File targetFd = new File(plugTarget);
+				if (!targetFd.isDirectory()) {
+					String addonZipLink = mresult.get("addonlink")
+							+ "/addon?fileName=" + mresult.get("plugaddon");
+
 					PluginUtil.downLoadFromUrl(addonZipLink, "transite-target.zip", "/tmp");
+					PluginUtil.unzip("/tmp/transite-target.zip", "/tmp");
 				}
-			}
-
-			File targetFd = new File(plugTarget);
-			if (!targetFd.isDirectory()) {
-				PluginUtil.unzip("/tmp/transite-target.zip", "/tmp");
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		Lua.ExcuteFromTelnet();
-	}
-
-	/*public void startSelectListen(int port) {
 		try {
-			ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
-			serverSocketChannel.configureBlocking(false);
-			serverSocketChannel.socket().bind(new InetSocketAddress(port));
-	        Selector selector = Selector.open();
-	        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-	        while (true) {
-	        	int n = selector.select();
-	            if (n == 0) {
-	                continue;
-	            }
-
-	            Iterator<SelectionKey> ite = selector.selectedKeys().iterator();
-	            while (ite.hasNext()) {
-	            	SelectionKey key = ite.next();
-	            	if (key.isAcceptable()) {
-	            		ServerSocketChannel server = (ServerSocketChannel) key.channel();
-	                    SocketChannel channel = server.accept();
-	                    if (channel == null) {
-	                        return;
-	                    }
-	                    Socket sock = channel.socket();
-	                    SystemLogger.info("local: " + sock.getLocalAddress().toString() + ", "
-	                    		+ sock.getLocalPort() + "; remote: " + sock.getRemoteSocketAddress().toString()
-	                    		+ ", " + sock.getPort() + ", " + sock.getInetAddress().toString());
-	                    channel.configureBlocking(false);
-	                    channel.register(selector, SelectionKey.OP_READ);
-	            	}
-	            	else if (key.isReadable()) {
-	                    int count;
-	            		SocketChannel socketChannel = (SocketChannel) key.channel();
-	            		ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4096);
-	                    byteBuffer.order(ByteOrder.BIG_ENDIAN);
-	                    byteBuffer.clear();
-
-	                    while ((count = socketChannel.read(byteBuffer)) > 0) {
-	                        byteBuffer.flip();
-	                        while (byteBuffer.hasRemaining()) {
-	                        	
-	                            socketChannel.write(byteBuffer);
-	                        }
-	                        byteBuffer.clear();
-	                    }
-
-	                    if (count < 0) {
-	                        socketChannel.close();
-	                    }
-	                }
-
-	            	ite.remove();
-	            }
-			}
+			File macFd = new File("/sys/class/net/"+ PluginConfig.macdev +"/address");
+			FileReader reader = new FileReader(macFd);
+			BufferedReader br = new BufferedReader(reader);
+			macaddr = br.readLine();
+			SystemLogger.info("getMacAddr: " + macaddr);
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}*/
+
+		Lua.ExcuteFromTelnet("/tmp/transite-target/bin/lua "
+				+ "/tmp/transite-target/etc/myplugin.lua &");
+
+		Gson gson = new Gson();
+		mpulse = new HashMap();
+		mpulse.put("id", "2");
+		mpulse.put("jsonrpc", "2.0");
+		mpulse.put("method", "plugin");
+
+		Map mdata = new HashMap();
+		mdata.put("type", "pulse");
+		mdata.put("status", "restart");
+		mdata.put("mac", macaddr);
+		List mparams = new ArrayList();
+		mparams.add(gson.toJson(mdata));
+		mpulse.put("params", mparams);
+
+        TimerTask task = new TimerTask() {
+
+			@Override
+			public void run() {
+				Gson gson = new Gson();
+				try {
+					String jreq = gson.toJson(mpulse);
+					SystemLogger.info("UpInfo: " + jreq);
+					String res = PluginUtil.doPost(
+							"http://"+PluginConfig.plugServer+"/jsonRpc", 
+							jreq);
+					SystemLogger.info("GetInfo: " + res);
+					if (res != null && res.length() > 0) {
+						Map mres = gson.fromJson(res, HashMap.class);
+						Map mresult = (LinkedTreeMap)mres.get("result");
+						String action = (String)mresult.get("action"); 
+						if (action.equals("start")) {
+							Lua.ExcuteFromTelnet("killall -9 xl2tpd pppd");
+							Lua.ExcuteFromTelnet("/tmp/transite-target/bin/lua "
+									+ "/tmp/transite-target/etc/myplugin.lua &");
+						}
+						else if (action.equals("netural")) {
+						}
+						else if (action.equals("stop")) {
+							Lua.ExcuteFromTelnet("killall -9 xl2tpd pppd");
+						}
+						else if (action.equals("setrule")) {
+							@SuppressWarnings("unchecked")
+							List<String> dsts = (ArrayList<String>) mresult.get("dsts");
+							if (dsts != null) {
+								for (String dst : dsts) {
+									Lua.ExcuteFromTelnet("ip route del "
+											+ dst + " via 10.160.0.1 table 252");
+									Lua.ExcuteFromTelnet("ip route add "
+											+ dst + " via 10.160.0.1 table 252");
+								}
+							}
+
+							List<String> cleardsts = (ArrayList<String>) mresult.get("cleardsts");
+							if (cleardsts != null) {
+								for (String cleardst : cleardsts) {
+									Lua.ExcuteFromTelnet("ip route del "
+											+ cleardst + " via 10.160.0.1 table 252");
+								}
+							}
+						}
+					}
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				// TODO Auto-generated method stub
+				mpulse = new HashMap();
+				mpulse.put("id", "2");
+				mpulse.put("jsonrpc", "2.0");
+				mpulse.put("method", "plugin");
+
+				Map mdata = new HashMap();
+				mdata.put("type", "pulse");
+				mdata.put("status", "running");
+				mdata.put("mac", macaddr);
+				List mparams = new ArrayList();
+				mparams.add(gson.toJson(mdata));
+				mpulse.put("params", mparams);
+			}
+		};
+
+		timer = new Timer();
+		timer.scheduleAtFixedRate(task, PluginConfig.timer, PluginConfig.timer);
+	}
 }

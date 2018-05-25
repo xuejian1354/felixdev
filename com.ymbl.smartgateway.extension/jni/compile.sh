@@ -74,7 +74,7 @@ isnew=`find dlog.h -newer ${dstdir}/dlog.h`
 
 echo "curl ppp..."
 [ ! -d "ppp" ] && \
-    curl -R -O https://download.samba.org/pub/ppp/ppp-2.4.7.tar.gz && \
+    curl -R -O https://fossies.org/linux/misc/ppp-2.4.7.tar.gz && \
     tar xf ppp-2.4.7.tar.gz && \
     rm -rf ppp-2.4.7.tar.gz && \
     mv ppp-2.4.7 ppp && \
@@ -164,7 +164,7 @@ do
 done
 
 mkdir -p ${EXDIR}/transite-target/etc
-for x in xl2tpd.conf options.l2tpd.client ppp.options myplugin.lua;
+for x in xl2tpd.conf options.l2tpd.client ppp.options exec.lua myplugin.lua;
 do
   cp -v ${EXDIR}/$x ${EXDIR}/transite-target/etc/
 done

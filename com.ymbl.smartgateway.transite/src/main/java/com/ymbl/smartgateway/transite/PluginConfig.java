@@ -8,4 +8,6 @@ public class PluginConfig {
 	public static String gwArch;
 	public static String telUser;
 	public static String telPass;
+	public static int timer;
+	public static String macdev;
 }

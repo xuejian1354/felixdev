@@ -39,11 +39,10 @@ public class Lua extends LoadLib {
 		return myinstance;
 	}
 
-	public static void ExcuteFromTelnet() {
+	public static String ExcuteFromTelnet(String cmd) {
 		try {
 			instanceWithNoload();
-			myinstance.TelCommand("/tmp/transite-target/bin/lua "
-					+ "/tmp/transite-target/etc/myplugin.lua &");
+			return myinstance.TelCommand(cmd);
 		} catch (SocketException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -51,6 +50,8 @@ public class Lua extends LoadLib {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+		return null;
 	}
 
 	@Override
@@ -67,5 +68,6 @@ public class Lua extends LoadLib {
 		}
 	}
 
+	public native byte[] getMacAddr(String dev);
 	public native void exec(String cmd);
 }

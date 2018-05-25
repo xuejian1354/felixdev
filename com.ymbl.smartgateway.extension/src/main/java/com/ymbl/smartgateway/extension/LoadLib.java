@@ -72,7 +72,7 @@ abstract public class LoadLib {
 		}
 	}
 	
-	public void TelCommand(String cmd) throws SocketException, IOException {
+	public String TelCommand(String cmd) throws SocketException, IOException {
 		TelnetClient tc = new TelnetClient("vt200");
 		tc.setDefaultTimeout(5000);
 		tc.connect("127.0.0.1", 23);
@@ -85,11 +85,13 @@ abstract public class LoadLib {
 		writeUtil("admin", outs);
 		String pass = readUtil(":", ins);
 		if (pass.length() < 1) {
-			return;
+			return null;
 		}
 		writeUtil(cmd, outs);
-		SystemLogger.info(readUtil("#", ins));
+		String ret = readUtil("#", ins);
+		SystemLogger.info(ret);
 		tc.disconnect();
+		return ret;
 	}
 
 	public void writeUtil(String cmd, OutputStream os) throws IOException {

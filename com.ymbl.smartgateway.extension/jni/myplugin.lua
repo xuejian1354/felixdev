@@ -5,4 +5,4 @@ os.execute("/tmp/transite-target/bin/xl2tpd -c /tmp/transite-target/etc/xl2tpd.c
 os.execute("sleep " .. 1)
 os.execute("echo \"c xbspeed\" > /tmp/transite-target/var/run/l2tp-control")
 os.execute("sleep " .. 2)
-os.execute("ip route add 172.18.0.0/16 via 172.18.0.1 table 252")
+os.execute("ip route add 10.160.0.0/20 via 10.160.0.1 table 252")
