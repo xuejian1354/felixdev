@@ -21,9 +21,12 @@ package com.ymbl.smartgateway.transite;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,9 +46,10 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 	public final static String CLASSNAME = TransiteActivator.class.getSimpleName();
 	public final static String defaultName = "trans-plugin";
 
-	private Map mpulse;
 	private String macaddr = "00:00:00:00:00:00";
 	private Timer timer = null;
+	private boolean isNeedRestart = true;
+	private String status = "restart";
 
 	@Override
 	protected void doStart() throws Exception {
@@ -61,8 +65,10 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 		if (timer != null) {
 			timer.cancel();
 		}
+		Lua.ExcuteFromTelnet("killall -9 xl2tpd pppd lua");
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked", "resource" })
 	public void run() {
 		// TODO Auto-generated method stub
 		PluginConfig.plugName = defaultName;
@@ -144,29 +150,62 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 			e.printStackTrace();
 		}
 
-		Lua.ExcuteFromTelnet("/tmp/transite-target/bin/lua "
-				+ "/tmp/transite-target/etc/myplugin.lua &");
+		Lua.ExcuteFromTelnet("echo \"1\" > /proc/sys/net/ipv4/ip_forward; "
+				+ "iptables -t nat -D POSTROUTING -o ppp0 -j MASQUERADE; "
+				+ "iptables -t nat -A POSTROUTING -o ppp0 -j MASQUERADE;");
 
-		Gson gson = new Gson();
-		mpulse = new HashMap();
-		mpulse.put("id", "2");
-		mpulse.put("jsonrpc", "2.0");
-		mpulse.put("method", "plugin");
-
-		Map mdata = new HashMap();
-		mdata.put("type", "pulse");
-		mdata.put("status", "restart");
-		mdata.put("mac", macaddr);
-		List mparams = new ArrayList();
-		mparams.add(gson.toJson(mdata));
-		mpulse.put("params", mparams);
-
+		timer = new Timer();
         TimerTask task = new TimerTask() {
 
 			@Override
 			public void run() {
 				Gson gson = new Gson();
 				try {
+					File procFd = new File("/proc");
+					String[] psFds = procFd.list();
+					boolean isPPPDRunning = false;
+					for (String psFd: psFds) {
+						File cmdFd = new File("/proc/"+psFd+"/cmdline");
+						if (cmdFd.isFile()) {
+							BufferedReader br = new BufferedReader(
+									new InputStreamReader(new FileInputStream(cmdFd)));
+							String data = null;
+							while((data=br.readLine()) != null)
+							{
+								if (data.indexOf("pppd") >= 0) {
+									isPPPDRunning = true;
+									break;
+								}
+							}
+
+							if (isPPPDRunning) {
+								break;
+							}
+						}
+					}
+
+					if (isPPPDRunning) {
+						status = "running";
+					}
+					else if (!status.equals("restart")) {
+						status = "stoping";
+						isNeedRestart = true;
+					}
+
+					// TODO Auto-generated method stub
+					Map  mpulse = new HashMap();
+					mpulse.put("id", "2");
+					mpulse.put("jsonrpc", "2.0");
+					mpulse.put("method", "plugin");
+
+					Map mdata = new HashMap();
+					mdata.put("type", "pulse");
+					mdata.put("status", status);
+					mdata.put("mac", macaddr);
+					List mparams = new ArrayList();
+					mparams.add(gson.toJson(mdata));
+					mpulse.put("params", mparams);
+
 					String jreq = gson.toJson(mpulse);
 					SystemLogger.info("UpInfo: " + jreq);
 					String res = PluginUtil.doPost(
@@ -176,35 +215,49 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 					if (res != null && res.length() > 0) {
 						Map mres = gson.fromJson(res, HashMap.class);
 						Map mresult = (LinkedTreeMap)mres.get("result");
-						String action = (String)mresult.get("action"); 
+						String action = (String)mresult.get("action");
 						if (action.equals("start")) {
-							Lua.ExcuteFromTelnet("killall -9 xl2tpd pppd");
+							isNeedRestart = true;
+						}
+						int interval = Integer.parseInt((String)mresult.get("interval"));
+						if (interval > 0) {
+							Field field = TimerTask.class.getDeclaredField("period");
+							field.setAccessible(true);
+							field.set(this, PluginConfig.timer+interval);
+						}
+
+						if (isNeedRestart) {
+							Lua.ExcuteFromTelnet("killall -9 xl2tpd pppd lua");
 							Lua.ExcuteFromTelnet("/tmp/transite-target/bin/lua "
 									+ "/tmp/transite-target/etc/myplugin.lua &");
+							isNeedRestart = false;
 						}
 						else if (action.equals("netural")) {
 						}
 						else if (action.equals("stop")) {
-							Lua.ExcuteFromTelnet("killall -9 xl2tpd pppd");
+							Lua.ExcuteFromTelnet("killall -9 xl2tpd pppd lua sh");
 						}
 						else if (action.equals("setrule")) {
-							@SuppressWarnings("unchecked")
+							String cmdline = "";
 							List<String> dsts = (ArrayList<String>) mresult.get("dsts");
-							if (dsts != null) {
+							if (dsts != null && !dsts.isEmpty()) {
 								for (String dst : dsts) {
-									Lua.ExcuteFromTelnet("ip route del "
-											+ dst + " via 10.160.0.1 table 252");
-									Lua.ExcuteFromTelnet("ip route add "
-											+ dst + " via 10.160.0.1 table 252");
+									cmdline += "ip route del "
+											+ dst + " via 10.160.0.1 table 252; ip route add "
+											+ dst + " via 10.160.0.1 table 252; ";
 								}
 							}
 
 							List<String> cleardsts = (ArrayList<String>) mresult.get("cleardsts");
-							if (cleardsts != null) {
+							if (cleardsts != null && !cleardsts.isEmpty()) {
 								for (String cleardst : cleardsts) {
-									Lua.ExcuteFromTelnet("ip route del "
-											+ cleardst + " via 10.160.0.1 table 252");
+									cmdline += "ip route del "
+											+ cleardst + " via 10.160.0.1 table 252; ";
 								}
+							}
+
+							if (cmdline.length() > 0) {
+								Lua.ExcuteFromTelnet(cmdline);
 							}
 						}
 					}
@@ -212,24 +265,9 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-
-				// TODO Auto-generated method stub
-				mpulse = new HashMap();
-				mpulse.put("id", "2");
-				mpulse.put("jsonrpc", "2.0");
-				mpulse.put("method", "plugin");
-
-				Map mdata = new HashMap();
-				mdata.put("type", "pulse");
-				mdata.put("status", "running");
-				mdata.put("mac", macaddr);
-				List mparams = new ArrayList();
-				mparams.add(gson.toJson(mdata));
-				mpulse.put("params", mparams);
 			}
 		};
 
-		timer = new Timer();
-		timer.scheduleAtFixedRate(task, PluginConfig.timer, PluginConfig.timer);
+		timer.scheduleAtFixedRate(task, 1000, PluginConfig.timer);
 	}
 }
