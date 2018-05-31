@@ -12,7 +12,7 @@ com.ymbl.smartgateway.extension/jni/xl2tpd/
 com.ymbl.smartgateway.extension/jni/ppp/
 com.ymbl.smartgateway.extension/jni/lua/
 com.ymbl.smartgateway.extension/jni/RedirectToSock5Service/Makefile
-transite-target.zip
+transite-*.zip
 /*/src/main/java/sudo
 /*/src/main/java/xtables/
 /*/src/main/java/options.l2tpd.client

@@ -1,14 +1,14 @@
 #!/bin/sh
 
 #arm,mips,x86
-PLAT=arm
+PLAT=mips
 
 if [ ${PLAT} == "arm" ]; then
   TARCC=arm-develop-linux-gnueabi-gcc
   TARARCH=arm-develop
 elif [ ${PLAT} == "mips" ]; then
-  TARCC=mips-en751221-linux-gnu-gcc
-  TARARCH=mips-en751221
+  TARCC=mips-unknown-linux-uclibc-gcc
+  TARARCH=mips-unknown
 elif [ ${PLAT} == "x86" ]; then
   TARCC=gcc
   TARARCH=
@@ -128,7 +128,7 @@ done
 
 isnew=`find compile.sh -newer xl2tpd/Makefile`
 [ "$isnew" == "compile.sh" ] && make -C xl2tpd clean && touch xl2tpd/Makefile
-make -C xl2tpd CC=${TARCC} DESTDIR=${EXDIR}/xl2tpd/target CFLAGS="-DDEBUG_PPPD -DTRUST_PPPD_TO_DIE -DSANITY -DLINUX -DUSE_KERNEL -DIP_ALLOCATION -D_JNI_IMPLEMENTATION_ -I${JHOME}/include -I${JHOME}/include/linux -I${EXDIR}/extra/libpcap/include" LDFLAGS=-L${EXDIR}/extra/libpcap/lib/${TARARCH}
+make -C xl2tpd CC=${TARCC} DESTDIR=${EXDIR}/xl2tpd/target CFLAGS="-fPIC -DDEBUG_PPPD -DTRUST_PPPD_TO_DIE -DSANITY -DLINUX -DUSE_KERNEL -DIP_ALLOCATION -D_JNI_IMPLEMENTATION_ -I${JHOME}/include -I${JHOME}/include/linux -I${EXDIR}/extra/libpcap/include" LDFLAGS=-L${EXDIR}/extra/libpcap/lib/${TARARCH}
 
 isnew=`find compile.sh -newer lua/src/Makefile`
 [ "$isnew" == "compile.sh" ] && make -C lua/src clean && touch lua/src/Makefile
@@ -158,7 +158,7 @@ echo "copying..."
 #done
 
 mkdir -p ${EXDIR}/transite-target/bin
-for x in xl2tpd/xl2tpd ppp/target/sbin/pppd lua/src/lua;
+for x in extra/busybox/bin/${TARARCH}/busybox xl2tpd/xl2tpd ppp/target/sbin/pppd lua/src/lua;
 do
   cp -v ${EXDIR}/$x ${EXDIR}/transite-target/bin/
 done
@@ -184,5 +184,5 @@ done
 mkdir -p ${EXDIR}/transite-target/var/run
 
 cd ${EXDIR}
-zip -r ${EXDIR}/transite-target.zip transite-target/
+zip -r ${EXDIR}/transite-${TARARCH}.zip transite-target/
 rm -rf ${EXDIR}/transite-target
