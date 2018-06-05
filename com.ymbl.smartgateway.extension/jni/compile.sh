@@ -11,7 +11,7 @@ elif [ ${PLAT} == "mips" ]; then
   TARARCH=mips-unknown
 elif [ ${PLAT} == "x86" ]; then
   TARCC=gcc
-  TARARCH=
+  TARARCH=x86
 fi
 
 EXSH=`pwd`/$0
@@ -20,32 +20,32 @@ EXDIR=$(dirname ${EXSH})
 PRETARGET=/tmp/transite-target
 JHOME=/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.41.x86_64
 
-#cfile=com_ymbl_smartgateway_extension_IpTables.c
-#hfile=com_ymbl_smartgateway_extension_IpTables.h
-#dstdir=iptables/iptables
+cfile=com_ymbl_smartgateway_extension_IpTables.c
+hfile=com_ymbl_smartgateway_extension_IpTables.h
+dstdir=iptables/iptables
 
 cd ${EXDIR}
 
-#echo "git iptables..."
-#[ ! -d "iptables" ] && \
-#    git clone -b v1.4.21 git://git.netfilter.org/iptables && \
-#    rm -rf iptables/.git && \
-#    patch -p0 < patches/iptables-jni-1.4.21.patch && \
-#    cp -v ${cfile} ${dstdir} && \
-#    cp -v ${hfile} ${dstdir} && \
-#    cp -v dlog.h ${dstdir}
+echo "git iptables..."
+[ ! -d "iptables" ] && \
+    git clone -b v1.4.21 git://git.netfilter.org/iptables && \
+    rm -rf iptables/.git && \
+    patch -p0 < patches/iptables-jni-1.4.21.patch && \
+    cp -v ${cfile} ${dstdir} && \
+    cp -v ${hfile} ${dstdir} && \
+    cp -v dlog.h ${dstdir}
 
-#isnew=`find ${cfile} -newer ${dstdir}/${cfile}`
-#[ "$isnew" == "${cfile}" ] && \
-#    cp -v ${cfile} ${dstdir}
+isnew=`find ${cfile} -newer ${dstdir}/${cfile}`
+[ "$isnew" == "${cfile}" ] && \
+    cp -v ${cfile} ${dstdir}
 
-#isnew=`find ${hfile} -newer ${dstdir}/${hfile}`
-#[ "$isnew" == "${hfile}" ] && \
-#    cp -v ${hfile} ${dstdir}
+isnew=`find ${hfile} -newer ${dstdir}/${hfile}`
+[ "$isnew" == "${hfile}" ] && \
+    cp -v ${hfile} ${dstdir}
 
-#isnew=`find dlog.h -newer ${dstdir}/dlog.h`
-#[ "$isnew" == "dlog.h" ] && \
-#    cp -v dlog.h ${dstdir}
+isnew=`find dlog.h -newer ${dstdir}/dlog.h`
+[ "$isnew" == "dlog.h" ] && \
+    cp -v dlog.h ${dstdir}
 
 cfile=com_ymbl_smartgateway_extension_XL2tpd.c
 hfile=com_ymbl_smartgateway_extension_XL2tpd.h
@@ -108,14 +108,14 @@ isnew=`find dlog.h -newer ${dstdir}/dlog.h`
     cp -v dlog.h ${dstdir}
 
 echo "compiling..."
-#for i in ppp iptables RedirectToSock5Service;
-for i in ppp;
+for i in ppp iptables RedirectToSock5Service;
 do
   cd $i
+  echo "Entering ${i}..."
   [ ! -x "configure" ] && ./autogen.sh
   isnew=`find ../compile.sh -newer configure`
   (([ "$isnew" == "../compile.sh" ] && make clean) || [ ! -f "Makefile" ]) && touch configure && ( \
-    if [ ${PLAT} == "x86" ]; then ./configure --prefix=${PRETARGET}; else ./configure --prefix=${PRETARGET} --host=${TARCC} CXXFLAGS="-I${EXDIR}/extra/libevent/include -I${EXDIR}/extra/libpcap/include" LDFLAGS=-L${EXDIR}/extra/libevent/lib/${TARARCH}; fi)
+    if [ ${PLAT} == "x86" ]; then ./configure --prefix=${PRETARGET}; else ./configure --prefix=${PRETARGET} --host=${TARCC%%-gcc} CXXFLAGS="-I${EXDIR}/extra/libevent/include -I${EXDIR}/extra/libpcap/include" LDFLAGS=-L${EXDIR}/extra/libevent/lib/${TARARCH}; fi)
 
   make CC=${TARCC} && make install
   rm -rf ${EXDIR}/$i/target
@@ -168,9 +168,13 @@ do
 done
 
 mkdir -p ${EXDIR}/transite-target/lib
-for x in xl2tpd/XL2tpd.so lua/src/Lua.so;
+rm -rf ${EXDIR}/transite-target/lib/xtables
+cp -v ${EXDIR}/iptables/target/lib/libtransite.so.0.1.0 ${EXDIR}/transite-target/lib/IpTables.so
+cp -v ${EXDIR}/RedirectToSock5Service/target/lib/librectsocks5.so.0.1.0 ${EXDIR}/transite-target/lib/RedirectToSocks5Service.so
+cp -v ${EXDIR}/RedirectToSock5Service/target/lib/librectsocks5.so.0.1.0 ${EXDIR}/../../$j/src/main/java/RedirectToSocks5Service.so
+for x in xl2tpd/XL2tpd.so lua/src/Lua.so iptables/target/lib/libip4tc.so.0 lib/libip6tc.so.0 iptables/target/lib/libxtables.so.10 iptables/target/lib/xtables;
 do
-  cp -v ${EXDIR}/$x ${EXDIR}/transite-target/lib/
+  cp -adv ${EXDIR}/$x ${EXDIR}/transite-target/lib/
 done
 
 mkdir -p ${EXDIR}/transite-target/lib/pppd/2.4.7
