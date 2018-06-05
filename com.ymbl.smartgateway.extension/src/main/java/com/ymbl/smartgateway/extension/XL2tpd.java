@@ -9,7 +9,7 @@ public class XL2tpd extends LoadLib {
 	private static XL2tpd myinstance = null;
 
 	protected XL2tpd(){
-		addLoadLibsForNative(false);
+		//addLoadLibsForNative(false);
 	}
 
 	protected XL2tpd(boolean fornative) {
@@ -29,7 +29,7 @@ public class XL2tpd extends LoadLib {
 
 		return myinstance;
 	}
-	
+
 	public static XL2tpd instanceWithNoload() {
 		if (myinstance == null) {
 			myinstance = new XL2tpd(false);
@@ -78,6 +78,26 @@ public class XL2tpd extends LoadLib {
 		}
 	}
 
-	public native void start();
-	public native void route();
+	public void startEx() {
+		try {
+			start();
+		} catch (UnsatisfiedLinkError e) {
+			// TODO: handle exception
+			addLoadLibsForNative(false);
+			start();
+		}
+	}
+
+	public void routeEx() {
+		try {
+			route();
+		} catch (UnsatisfiedLinkError e) {
+			// TODO: handle exception
+			addLoadLibsForNative(false);
+			route();
+		}
+	}
+
+	private native void start();
+	private native void route();
 }

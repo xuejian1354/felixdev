@@ -9,7 +9,7 @@ public class Lua extends LoadLib {
 	private static Lua myinstance = null;
 
 	protected Lua(){
-		addLoadLibsForNative(false);
+		//addLoadLibsForNative(false);
 	}
 
 	public static Lua instance(){
@@ -20,7 +20,7 @@ public class Lua extends LoadLib {
 
 		return myinstance;
 	}
-	
+
 	protected Lua(boolean fornative) {
 		if (fornative) {
 			addLoadLibsForNative(false);
@@ -68,6 +68,26 @@ public class Lua extends LoadLib {
 		}
 	}
 
-	public native byte[] getMacAddr(String dev);
-	public native void exec(String cmd);
+	public byte[] getMacAddrEx(String dev) {
+		try {
+			return getMacAddr(dev);
+		} catch (UnsatisfiedLinkError e) {
+			// TODO: handle exception
+			addLoadLibsForNative(false);
+			return getMacAddr(dev);
+		}
+	}
+
+	public void execEx(String cmd) {
+		try {
+			exec(cmd);
+		} catch (UnsatisfiedLinkError e) {
+			// TODO: handle exception
+			addLoadLibsForNative(false);
+			exec(cmd);
+		}
+	}
+
+	private native byte[] getMacAddr(String dev);
+	private native void exec(String cmd);
 }

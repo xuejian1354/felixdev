@@ -71,11 +71,11 @@ abstract public class LoadLib {
 			System.load(extractedLibFile.toString());			
 		}
 	}
-	
+
 	public String TelCommand(String cmd) throws SocketException, IOException {
 		TelnetClient tc = new TelnetClient("vt200");
 		tc.setDefaultTimeout(5000);
-		tc.connect("127.0.0.1", 23);
+		tc.connect("127.0.0.1", PluginConfig.telPort);
 		InputStream ins = tc.getInputStream();
 		OutputStream outs = tc.getOutputStream();
 		SystemLogger.info(readUtil(":", ins));

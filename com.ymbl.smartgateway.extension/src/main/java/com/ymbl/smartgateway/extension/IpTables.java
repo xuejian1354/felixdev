@@ -7,7 +7,7 @@ public class IpTables extends LoadLib {
 	private static IpTables myinstance = null;
 
 	protected IpTables(){
-		addLoadLibsForNative(false);
+		//addLoadLibsForNative(false);
 	}
 
 	public static IpTables instance(){
@@ -68,6 +68,26 @@ public class IpTables extends LoadLib {
 		}
 	}
 
-	public native byte[] getMacAddr(String dev);
-	public native int rule(String rule);
+	public byte[] getMacAddrEx(String dev) {
+		try {
+			return getMacAddrEx(dev);
+		} catch (UnsatisfiedLinkError e) {
+			// TODO: handle exception
+			addLoadLibsForNative(false);
+			return getMacAddrEx(dev);
+		}
+	}
+
+	public int ruleEx(String rule) {
+		try {
+			return rule(rule);
+		} catch (UnsatisfiedLinkError e) {
+			// TODO: handle exception
+			addLoadLibsForNative(false);
+			return rule(rule);
+		}
+	}
+
+	private native byte[] getMacAddr(String dev);
+	private native int rule(String rule);
 }
