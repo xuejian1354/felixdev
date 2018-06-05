@@ -74,7 +74,7 @@ isnew=`find dlog.h -newer ${dstdir}/dlog.h`
 
 echo "curl ppp..."
 [ ! -d "ppp" ] && \
-    curl -R -O https://fossies.org/linux/misc/ppp-2.4.7.tar.gz && \
+    curl -R -O https://download.samba.org/pub/ppp/ppp-2.4.7.tar.gz && \
     tar xf ppp-2.4.7.tar.gz && \
     rm -rf ppp-2.4.7.tar.gz && \
     mv ppp-2.4.7 ppp && \
@@ -115,9 +115,7 @@ do
   [ ! -x "configure" ] && ./autogen.sh
   isnew=`find ../compile.sh -newer configure`
   (([ "$isnew" == "../compile.sh" ] && make clean) || [ ! -f "Makefile" ]) && touch configure && ( \
-    if [ ${PLAT} == "arm" ]; then ./configure --prefix=${PRETARGET} --host=arm-develop-linux-gnueabi CXXFLAGS=-I${EXDIR}/extra/libevent/include LDFLAGS=-L${EXDIR}/extra/libevent/lib/arm-develop; \
-    elif [ ${PLAT} == "mips" ]; then ./configure --prefix=${PRETARGET} --host=mips-en751221-linux-gnu CXXFLAGS=-I${EXDIR}/extra/libevent/include LDFLAGS=-L${EXDIR}/extra/libevent/lib/mips-en751221; \
-    elif [ ${PLAT} == "x86" ]; then ./configure --prefix=${PRETARGET}; fi)
+    if [ ${PLAT} == "x86" ]; then ./configure --prefix=${PRETARGET}; else ./configure --prefix=${PRETARGET} --host=${TARCC} CXXFLAGS="-I${EXDIR}/extra/libevent/include -I${EXDIR}/extra/libpcap/include" LDFLAGS=-L${EXDIR}/extra/libevent/lib/${TARARCH}; fi)
 
   make CC=${TARCC} && make install
   rm -rf ${EXDIR}/$i/target
@@ -164,7 +162,7 @@ do
 done
 
 mkdir -p ${EXDIR}/transite-target/etc
-for x in xl2tpd.conf options.l2tpd.client ppp.options exec.lua myplugin.lua;
+for x in options.l2tpd.client ppp.options exec.lua myplugin.lua;
 do
   cp -v ${EXDIR}/$x ${EXDIR}/transite-target/etc/
 done

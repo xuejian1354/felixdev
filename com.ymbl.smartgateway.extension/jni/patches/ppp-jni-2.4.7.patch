@@ -11,6 +11,15 @@
  clean:
 --- ppp/pppd/Makefile.linux
 +++ ppp/pppd/Makefile.linux
+@@ -48,7 +48,7 @@ MPPE=y
+ # Uncomment the next line to include support for PPP packet filtering.
+ # This requires that the libpcap library and headers be installed
+ # and that the kernel driver support PPP packet filtering.
+-FILTER=y
++#FILTER=y
+ 
+ # Uncomment the next line to enable multilink PPP (enabled by default)
+ # Linux distributions: Please leave multilink ENABLED in your builds
 @@ -102,7 +102,7 @@ ifdef USE_SRP
  CFLAGS	+= -DUSE_SRP -DOPENSSL -I/usr/local/ssl/include
  LIBS	+= -lsrp -L/usr/local/ssl/lib -lcrypto
@@ -85,3 +94,168 @@
  #ifndef _ROOT_PATH
  #define _ROOT_PATH
  #endif
+--- ppp/pppd/chap_ms.c
++++ ppp/pppd/chap_ms.c
+@@ -81,7 +81,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+-#include <ctype.h>
++//#include <ctype.h>
+ #include <sys/types.h>
+ #include <sys/time.h>
+ #include <unistd.h>
+--- ppp/pppd/ipxcp.c
++++ ppp/pppd/ipxcp.c
+@@ -51,7 +51,7 @@
+ #include <stdio.h>
+ #include <string.h>
+ #include <unistd.h>
+-#include <ctype.h>
++//#include <ctype.h>
+ #include <sys/types.h>
+ #include <sys/socket.h>
+ #include <netinet/in.h>
+--- ppp/pppd/main.c
++++ ppp/pppd/main.c
+@@ -69,7 +69,7 @@
+ #define RCSID	"$Id: main.c,v 1.156 2008/06/23 11:47:18 paulus Exp $"
+ 
+ #include <stdio.h>
+-#include <ctype.h>
++//#include <ctype.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <unistd.h>
+--- ppp/pppd/multilink.c
++++ ppp/pppd/multilink.c
+@@ -28,7 +28,7 @@
+  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ #include <string.h>
+-#include <ctype.h>
++//#include <ctype.h>
+ #include <stdlib.h>
+ #include <netdb.h>
+ #include <errno.h>
+--- ppp/pppd/options.c
++++ ppp/pppd/options.c
+@@ -42,7 +42,7 @@
+ 
+ #define RCSID	"$Id: options.c,v 1.102 2008/06/15 06:53:06 paulus Exp $"
+ 
+-#include <ctype.h>
++//#include <ctype.h>
+ #include <stdio.h>
+ #include <errno.h>
+ #include <unistd.h>
+--- ppp/pppd/plugins/pppoatm/text2atm.c
++++ ppp/pppd/plugins/pppoatm/text2atm.c
+@@ -8,7 +8,7 @@
+ #endif
+ 
+ #include <stdio.h>
+-#include <ctype.h>
++//#include <ctype.h>
+ #include <string.h>
+ #include <limits.h>
+ 
+--- ppp/pppd/plugins/pppoatm/text2qos.c
++++ ppp/pppd/plugins/pppoatm/text2qos.c
+@@ -10,7 +10,7 @@
+ #include <stdlib.h>
+ #include <stdarg.h>
+ #include <string.h>
+-#include <ctype.h>
++//#include <ctype.h>
+ #include <limits.h>
+ 
+ #include "atm.h"
+--- ppp/pppd/plugins/radius/includes.h
++++ ppp/pppd/plugins/radius/includes.h
+@@ -16,7 +16,7 @@
+ 
+ #include <sys/types.h>
+ 
+-#include <ctype.h>
++//#include <ctype.h>
+ #include <stdio.h>
+ #include <errno.h>
+ #include <netdb.h>
+--- ppp/pppd/plugins/rp-pppoe/debug.c
++++ ppp/pppd/plugins/rp-pppoe/debug.c
+@@ -20,7 +20,7 @@ static char const RCSID[] =
+ #include <sys/time.h>
+ #include <time.h>
+ #include <unistd.h>
+-#include <ctype.h>
++//#include <ctype.h>
+ 
+ /**********************************************************************
+ *%FUNCTION: dumpHex
+--- ppp/pppd/plugins/winbind.c
++++ ppp/pppd/plugins/winbind.c
+@@ -52,7 +52,7 @@
+ #include <unistd.h>
+ #include <stdlib.h>
+ #include <errno.h>
+-#include <ctype.h>
++//#include <ctype.h>
+ 
+ #define BUF_LEN 1024
+ 
+--- ppp/pppd/srp-entry.c
++++ ppp/pppd/srp-entry.c
+@@ -33,7 +33,7 @@
+ #include <stdlib.h>
+ #include <unistd.h>
+ #include <string.h>
+-#include <ctype.h>
++//#include <ctype.h>
+ #include <t_pwd.h>
+ 
+ #ifndef	SOL2
+--- ppp/pppd/sys-linux.c
++++ ppp/pppd/sys-linux.c
+@@ -89,7 +89,7 @@
+ #include <mntent.h>
+ #include <signal.h>
+ #include <fcntl.h>
+-#include <ctype.h>
++//#include <ctype.h>
+ #include <termios.h>
+ #include <unistd.h>
+ 
+--- ppp/pppd/sys-solaris.c
++++ ppp/pppd/sys-solaris.c
+@@ -92,7 +92,7 @@
+ #include <stddef.h>
+ #include <stdlib.h>
+ #include <string.h>
+-#include <ctype.h>
++//#include <ctype.h>
+ #include <errno.h>
+ #include <fcntl.h>
+ #include <unistd.h>
+--- ppp/pppd/tty.c
++++ ppp/pppd/tty.c
+@@ -71,7 +71,7 @@
+ #define RCSID	"$Id: tty.c,v 1.27 2008/07/01 12:27:56 paulus Exp $"
+ 
+ #include <stdio.h>
+-#include <ctype.h>
++//#include <ctype.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <termios.h>
+--- ppp/pppd/utils.c
++++ ppp/pppd/utils.c
+@@ -31,7 +31,7 @@
+ #define RCSID	"$Id: utils.c,v 1.25 2008/06/03 12:06:37 paulus Exp $"
+ 
+ #include <stdio.h>
+-#include <ctype.h>
++//#include <ctype.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <unistd.h>

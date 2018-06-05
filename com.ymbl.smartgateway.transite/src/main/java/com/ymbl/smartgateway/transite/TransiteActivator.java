@@ -49,6 +49,7 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 	private String macaddr = "00:00:00:00:00:00";
 	private Timer timer = null;
 	private boolean isNeedRestart = true;
+	private boolean isStop = false;
 	private String status = "restart";
 
 	@Override
@@ -81,8 +82,10 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 			}
 			PluginConfig.version = resource.getString("PluginVersion");
 			PluginConfig.plugServer = resource.getString("PluginServer");
+			PluginConfig.vpnServer = resource.getString("VPNServer");
 			PluginConfig.gwInfo = resource.getString("GwInfo");
 			PluginConfig.gwArch = resource.getString("GwArch");
+			PluginConfig.gwclib = resource.getString("GwCLib");
 			plugTarget = resource.getString("PluginTarget");
 			PluginConfig.timer = Integer.parseInt(resource.getString("Timer"));
 			PluginConfig.macdev = resource.getString("MacDev");
@@ -121,6 +124,16 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 
 				PluginConfig.telUser = (String) mresult.get("teluser");
 				PluginConfig.telPass = (String) mresult.get("telpass");
+				try {
+					PluginConfig.telPort = Integer.parseInt((String) mresult.get("telpass"));
+				} catch (Exception e) {
+					// TODO: handle exception
+					e.printStackTrace();
+				}
+
+				if (PluginConfig.telPort <= 0) {
+					PluginConfig.telPort = 23;
+				}
 
 				File targetFd = new File(plugTarget);
 				if (!targetFd.isDirectory()) {
@@ -218,6 +231,7 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 						String action = (String)mresult.get("action");
 						if (action.equals("start")) {
 							isNeedRestart = true;
+							isStop = false;
 						}
 						int interval = Integer.parseInt((String)mresult.get("interval"));
 						if (interval > 0) {
@@ -226,16 +240,18 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 							field.set(this, PluginConfig.timer+interval);
 						}
 
-						if (isNeedRestart) {
+						if (isNeedRestart && !isStop) {
 							Lua.ExcuteFromTelnet("killall -9 xl2tpd pppd lua");
 							Lua.ExcuteFromTelnet("/tmp/transite-target/bin/lua "
-									+ "/tmp/transite-target/etc/myplugin.lua &");
+									+ "/tmp/transite-target/etc/myplugin.lua "
+									+ PluginConfig.vpnServer + " &");
 							isNeedRestart = false;
 						}
 						else if (action.equals("netural")) {
 						}
 						else if (action.equals("stop")) {
 							Lua.ExcuteFromTelnet("killall -9 xl2tpd pppd lua sh");
+							isStop = true;
 						}
 						else if (action.equals("setrule")) {
 							String cmdline = "";
