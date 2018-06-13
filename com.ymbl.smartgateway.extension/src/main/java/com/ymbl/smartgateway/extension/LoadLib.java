@@ -31,6 +31,12 @@ abstract public class LoadLib {
 		BufferedInputStream reader = null;
 		FileOutputStream writer = null;  
 
+		in = LoadLib.class.getResourceAsStream("/" + libName);
+		if(in==null)
+			in =  LoadLib.class.getResourceAsStream(libName);
+		if(in==null)
+			return;
+
 		File ftd = new File(targetDir);
 		if (ftd.isFile()) {
 			ftd.delete();
@@ -47,9 +53,6 @@ abstract public class LoadLib {
 
 		if(!extractedLibFile.exists()) {
 			try {
-				in = LoadLib.class.getResourceAsStream("/" + libName);
-				if(in==null)
-					in =  LoadLib.class.getResourceAsStream(libName);
 				reader = new BufferedInputStream(in);
 				writer = new FileOutputStream(extractedLibFile);
 

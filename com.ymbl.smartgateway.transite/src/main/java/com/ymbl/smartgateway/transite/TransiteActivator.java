@@ -109,6 +109,7 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 			mdata.put("pluginversion", PluginConfig.version);
 			mdata.put("gwinfo", PluginConfig.gwInfo);
 			mdata.put("gwarch", PluginConfig.gwArch);
+			mdata.put("gwclib", PluginConfig.gwclib);
 			List mparams = new ArrayList();
 			mparams.add(gson.toJson(mdata));
 			mreq.put("params", mparams);
@@ -125,7 +126,7 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 				PluginConfig.telUser = (String) mresult.get("teluser");
 				PluginConfig.telPass = (String) mresult.get("telpass");
 				try {
-					PluginConfig.telPort = Integer.parseInt((String) mresult.get("telpass"));
+					PluginConfig.telPort = Integer.parseInt((String) mresult.get("telport"));
 				} catch (Exception e) {
 					// TODO: handle exception
 					e.printStackTrace();

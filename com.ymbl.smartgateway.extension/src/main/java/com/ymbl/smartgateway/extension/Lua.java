@@ -59,7 +59,10 @@ public class Lua extends LoadLib {
 		// TODO Auto-generated method stub
 		try {
 			loadFileFromJAR("lua", "/tmp/transite-target/bin", false, false);
-			(new File("/tmp/transite-target/bin/lua")).setExecutable(true);
+			File lfd = new File("/tmp/transite-target/bin/lua");
+			if (lfd.exists()) {
+				lfd.setExecutable(true);
+			}
 			loadFileFromJAR("myplugin.lua", "/tmp/transite-target/etc", false, false);
 			loadFileFromJAR(Lua.class.getSimpleName()+".so", "/tmp/transite-target/lib", fornative, isreload);
 		} catch (IOException e) {

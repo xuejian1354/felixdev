@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #arm,mips,x86
-PLAT=mips
+PLAT=arm
 
 if [ ${PLAT} == "arm" ]; then
   TARCC=arm-develop-linux-gnueabi-gcc
