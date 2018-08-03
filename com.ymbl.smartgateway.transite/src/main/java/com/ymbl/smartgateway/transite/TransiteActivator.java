@@ -47,10 +47,14 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 	public final static String defaultName = "trans-plugin";
 
 	private String macaddr = "00:00:00:00:00:00";
+	private String vpnServer = "47.94.156.129";
 	private Timer timer = null;
 	private boolean isNeedRestart = true;
 	private boolean isStop = false;
 	private String status = "restart";
+	private String plugTarget = "/tmp/transite-target";
+	private String execWay = "telnet";
+	private int table = 0;
 
 	@Override
 	protected void doStart() throws Exception {
@@ -66,14 +70,13 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 		if (timer != null) {
 			timer.cancel();
 		}
-		Lua.ExcuteFromTelnet("killall -9 xl2tpd pppd lua");
+		exeCmd("killall -9 xl2tpd pppd lua");
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked", "resource" })
+	@SuppressWarnings("resource")
 	public void run() {
 		// TODO Auto-generated method stub
 		PluginConfig.plugName = defaultName;
-		String plugTarget = "/tmp/transite-target";
 		try {
 			ResourceBundle resource = ResourceBundle.getBundle("config");
 			PluginConfig.plugName = resource.getString("PluginName");
@@ -82,10 +85,9 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 			}
 			PluginConfig.version = resource.getString("PluginVersion");
 			PluginConfig.plugServer = resource.getString("PluginServer");
-			PluginConfig.vpnServer = resource.getString("VPNServer");
+			PluginConfig.plugType = resource.getString("PluginType");
 			PluginConfig.gwInfo = resource.getString("GwInfo");
-			PluginConfig.gwArch = resource.getString("GwArch");
-			PluginConfig.gwclib = resource.getString("GwCLib");
+			PluginConfig.vpnServer = vpnServer;
 			plugTarget = resource.getString("PluginTarget");
 			PluginConfig.timer = Integer.parseInt(resource.getString("Timer"));
 			PluginConfig.macdev = resource.getString("MacDev");
@@ -94,60 +96,6 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 			e.printStackTrace();
 		} finally {
 			SystemLogger.info("Plugin Name: " + PluginConfig.plugName);
-		}
-
-		try {
-			Gson gson = new Gson();
-			Map mreq = new HashMap();
-			mreq.put("id", "1");
-			mreq.put("jsonrpc", "2.0");
-			mreq.put("method", "plugin");
-
-			Map mdata = new HashMap();
-			mdata.put("type", "upinfo");
-			mdata.put("pluginname", PluginConfig.plugName);
-			mdata.put("pluginversion", PluginConfig.version);
-			mdata.put("gwinfo", PluginConfig.gwInfo);
-			mdata.put("gwarch", PluginConfig.gwArch);
-			mdata.put("gwclib", PluginConfig.gwclib);
-			List mparams = new ArrayList();
-			mparams.add(gson.toJson(mdata));
-			mreq.put("params", mparams);
-
-			String jreq = gson.toJson(mreq);
-			SystemLogger.info("UpInfo: " + jreq);
-
-			String res = PluginUtil.doPost("http://"+PluginConfig.plugServer+"/jsonRpc", jreq);
-			SystemLogger.info("GetInfo: " + res);
-			if (res != null && res.length() > 0) {
-				Map mres = gson.fromJson(res, HashMap.class);
-				Map mresult = (LinkedTreeMap)mres.get("result");
-
-				PluginConfig.telUser = (String) mresult.get("teluser");
-				PluginConfig.telPass = (String) mresult.get("telpass");
-				try {
-					PluginConfig.telPort = Integer.parseInt((String) mresult.get("telport"));
-				} catch (Exception e) {
-					// TODO: handle exception
-					e.printStackTrace();
-				}
-
-				if (PluginConfig.telPort <= 0) {
-					PluginConfig.telPort = 23;
-				}
-
-				File targetFd = new File(plugTarget);
-				if (!targetFd.isDirectory()) {
-					String addonZipLink = mresult.get("addonlink")
-							+ "/addon?fileName=" + mresult.get("plugaddon");
-
-					PluginUtil.downLoadFromUrl(addonZipLink, "transite-target.zip", "/tmp");
-					PluginUtil.unzip("/tmp/transite-target.zip", "/tmp");
-				}
-			}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 
 		try {
@@ -164,13 +112,10 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 			e.printStackTrace();
 		}
 
-		Lua.ExcuteFromTelnet("echo \"1\" > /proc/sys/net/ipv4/ip_forward; "
-				+ "iptables -t nat -D POSTROUTING -o ppp0 -j MASQUERADE; "
-				+ "iptables -t nat -A POSTROUTING -o ppp0 -j MASQUERADE;");
-
 		timer = new Timer();
         TimerTask task = new TimerTask() {
 
+			@SuppressWarnings({ "unchecked", "rawtypes" })
 			@Override
 			public void run() {
 				Gson gson = new Gson();
@@ -204,6 +149,10 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 					else if (!status.equals("restart")) {
 						status = "stoping";
 						isNeedRestart = true;
+					}
+					else {
+						upInfo();
+						return;
 					}
 
 					// TODO Auto-generated method stub
@@ -242,8 +191,8 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 						}
 
 						if (isNeedRestart && !isStop) {
-							Lua.ExcuteFromTelnet("killall -9 xl2tpd pppd lua");
-							Lua.ExcuteFromTelnet("/tmp/transite-target/bin/lua "
+							exeCmd("killall -9 xl2tpd pppd lua");
+							exeCmd("/tmp/transite-target/bin/lua "
 									+ "/tmp/transite-target/etc/myplugin.lua "
 									+ PluginConfig.vpnServer + " &");
 							isNeedRestart = false;
@@ -251,7 +200,7 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 						else if (action.equals("netural")) {
 						}
 						else if (action.equals("stop")) {
-							Lua.ExcuteFromTelnet("killall -9 xl2tpd pppd lua sh");
+							exeCmd("killall -9 xl2tpd pppd lua sh");
 							isStop = true;
 						}
 						else if (action.equals("setrule")) {
@@ -259,22 +208,35 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 							List<String> dsts = (ArrayList<String>) mresult.get("dsts");
 							if (dsts != null && !dsts.isEmpty()) {
 								for (String dst : dsts) {
-									cmdline += "ip route del "
-											+ dst + " via 10.160.0.1 table 252; ip route add "
-											+ dst + " via 10.160.0.1 table 252; ";
+									if(table > 0) {
+										cmdline += "ip route del " + dst + " via 10.160.0.1 table "
+												+ table + "; ip route add " + dst
+												+ " via 10.160.0.1 table " + table + "; ";
+									}
+									else {
+										cmdline += "ip route del "
+												+ dst + " via 10.160.0.1; ip route add "
+												+ dst + " via 10.160.0.1; ";
+									}
 								}
 							}
 
 							List<String> cleardsts = (ArrayList<String>) mresult.get("cleardsts");
 							if (cleardsts != null && !cleardsts.isEmpty()) {
 								for (String cleardst : cleardsts) {
-									cmdline += "ip route del "
-											+ cleardst + " via 10.160.0.1 table 252; ";
+									if(table > 0) {
+										cmdline += "ip route del " + cleardst
+												+ " via 10.160.0.1 table " + table + "; ";
+									}
+									else {
+										cmdline += "ip route del "
+												+ cleardst + " via 10.160.0.1; ";
+									}
 								}
 							}
 
 							if (cmdline.length() > 0) {
-								Lua.ExcuteFromTelnet(cmdline);
+								exeCmd(cmdline);
 							}
 						}
 					}
@@ -286,5 +248,104 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 		};
 
 		timer.scheduleAtFixedRate(task, 1000, PluginConfig.timer);
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	void upInfo() {
+		try {
+			Gson gson = new Gson();
+			Map mreq = new HashMap();
+			mreq.put("id", "1");
+			mreq.put("jsonrpc", "2.0");
+			mreq.put("method", "plugin");
+
+			Map mdata = new HashMap();
+			mdata.put("type", "upinfo");
+			mdata.put("plugname", PluginConfig.plugName);
+			mdata.put("plugversion", PluginConfig.version);
+			mdata.put("plugtype", PluginConfig.plugType);
+			mdata.put("gwinfo", PluginConfig.gwInfo);
+			mdata.put("mac", macaddr);
+			List mparams = new ArrayList();
+			mparams.add(gson.toJson(mdata));
+			mreq.put("params", mparams);
+
+			String jreq = gson.toJson(mreq);
+			SystemLogger.info("UpInfo: " + jreq);
+
+			String res = PluginUtil.doPost("http://"+PluginConfig.plugServer+"/jsonRpc", jreq);
+			SystemLogger.info("GetInfo: " + res);
+			if (res != null && res.length() > 0) {
+				Map mres = gson.fromJson(res, HashMap.class);
+				Map mresult = (LinkedTreeMap)mres.get("result");
+
+				String exec = (String) mresult.get("execway");
+				if(exec != null && exec.length() > 0) {
+					execWay = exec;
+				}
+
+				PluginConfig.vpnServer = (String) mresult.get("vpnserver");
+				String tStr = (String) mresult.get("routetable");
+				if(tStr != null && tStr.length() > 0) {
+					table = Integer.parseInt(tStr);
+				}
+
+				if(execWay.equals("telnet")) {
+					PluginConfig.telUser = (String) mresult.get("teluser");
+					PluginConfig.telPass = (String) mresult.get("telpass");
+					try {
+						PluginConfig.telPort = Integer.parseInt((String) mresult.get("telport"));
+					} catch (Exception e) {
+						// TODO: handle exception
+						e.printStackTrace();
+					}
+
+					if (PluginConfig.telPort <= 0) {
+						PluginConfig.telPort = 23;
+					}
+				}
+
+				File targetFd = new File(plugTarget);
+				if (!targetFd.isDirectory()) {
+					String addonZipLink;
+					if(mresult.get("plugaddon") != null 
+							&& ((String)mresult.get("plugaddon")).length() > 0) {
+					addonZipLink = mresult.get("addonlink")
+							+ "/addon?fileName=" + mresult.get("plugaddon");
+					}
+					else {
+						addonZipLink = (String)mresult.get("addonlink");
+					}
+
+					PluginUtil.downLoadFromUrl(addonZipLink, "transite-target.zip", "/tmp");
+					PluginUtil.unzip("/tmp/transite-target.zip", "/tmp");
+				}
+				else {
+					status = "running";
+				}
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		exeCmd("echo \"1\" > /proc/sys/net/ipv4/ip_forward; "
+				+ "iptables -t nat -D POSTROUTING -o ppp0 -j MASQUERADE; "
+				+ "iptables -t nat -A POSTROUTING -o ppp0 -j MASQUERADE;");
+	}
+
+	void exeCmd(String cmds) {
+		if(execWay.equals("telnet")) {
+			Lua.ExcuteFromTelnet(cmds);
+		}
+		else {
+			try {
+				String[] estr = {"/bin/sh", "-c", cmds};
+				Runtime.getRuntime().exec(estr);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 }
