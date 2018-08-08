@@ -37,15 +37,14 @@ public abstract class AbstractActivator implements BundleActivator
         this.context = context;
         this.logger = new TransLogger(context);
         SystemLogger.setLogService(this.logger);
-        doStart();
+        doStart(context);
     }
 
     public final void stop(BundleContext context) throws Exception
     {
-        doStop();
+        doStop(context);
     }
 
-    protected abstract void doStart() throws Exception;
-
-    protected abstract void doStop() throws Exception;   
+    protected abstract void doStart(BundleContext context) throws Exception;
+    protected abstract void doStop(BundleContext context) throws Exception;   
 }

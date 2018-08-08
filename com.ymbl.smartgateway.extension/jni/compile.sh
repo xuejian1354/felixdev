@@ -1,12 +1,18 @@
 #!/bin/sh
 
 #arm,mips,x86
-PLAT=arm
+PLAT=mips
 
 if [ ${PLAT} == "arm" ]; then
-  TARCC=arm-develop-linux-gnueabi-gcc
-  TARARCH=arm-develop
+   TARCC=arm-develop-linux-gnueabi-gcc
+   TARARCH=arm-develop
+elif [ ${PLAT} == "arm2" ]; then
+  TARCC=arm-openvir-linux-uclibcgnueabi-gcc
+  TARARCH=arm-openvir
 elif [ ${PLAT} == "mips" ]; then
+  TARCC=mips-en751221-linux-gnu-gcc
+  TARARCH=mips-en751221
+elif [ ${PLAT} == "mips2" ]; then
   TARCC=mips-unknown-linux-uclibc-gcc
   TARARCH=mips-unknown
 elif [ ${PLAT} == "x86" ]; then
@@ -161,11 +167,12 @@ do
   cp -v ${EXDIR}/$x ${EXDIR}/transite-target/bin/
 done
 
-mkdir -p ${EXDIR}/transite-target/etc
-for x in options.l2tpd.client ppp.options exec.lua myplugin.lua;
+mkdir -p ${EXDIR}/transite-target/etc/ppp
+for x in options.l2tpd.client exec.lua myplugin.lua;
 do
   cp -v ${EXDIR}/$x ${EXDIR}/transite-target/etc/
 done
+cp -v ${EXDIR}/ppp.options ${EXDIR}/transite-target/etc/ppp/options
 
 mkdir -p ${EXDIR}/transite-target/lib
 rm -rf ${EXDIR}/transite-target/lib/xtables

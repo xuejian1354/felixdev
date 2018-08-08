@@ -36,6 +36,7 @@ import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.osgi.framework.BundleContext;
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import com.ymbl.smartgateway.extension.Lua;
@@ -53,18 +54,18 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 	private boolean isStop = false;
 	private String status = "restart";
 	private String plugTarget = "/tmp/transite-target";
-	private String execWay = "telnet";
+	private String execWay = "ntelnet";
 	private int table = 0;
 
 	@Override
-	protected void doStart() throws Exception {
+	protected void doStart(BundleContext context) throws Exception {
 		// TODO Auto-generated method stub
-		SystemLogger.info(CLASSNAME + " start ...");
+        SystemLogger.info(CLASSNAME + " start ...");
         new Thread(this).start();
 	}
 
 	@Override
-	protected void doStop() throws Exception {
+	protected void doStop(BundleContext context) throws Exception {
 		// TODO Auto-generated method stub
 		SystemLogger.info(CLASSNAME + " stop ...");
 		if (timer != null) {
