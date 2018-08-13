@@ -85,8 +85,9 @@ abstract public class LoadLib {
 		writeUtil(PluginConfig.telUser, outs);
 		SystemLogger.info(readUtil(":", ins));
 		writeUtil(PluginConfig.telPass, outs);
-		writeUtil("admin", outs);
-		String pass = readUtil(":", ins);
+		//writeUtil("admin", outs);
+		String pass = readUtil("#", ins);
+		SystemLogger.info(pass);
 		if (pass.length() < 1) {
 			return null;
 		}

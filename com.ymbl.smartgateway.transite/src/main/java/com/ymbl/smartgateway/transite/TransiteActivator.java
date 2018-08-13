@@ -87,11 +87,51 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 			PluginConfig.version = resource.getString("PluginVersion");
 			PluginConfig.plugServer = resource.getString("PluginServer");
 			PluginConfig.plugType = resource.getString("PluginType");
-			if(PluginConfig.plugType.equals("zx279127")) {
+			if(PluginConfig.plugType.equals("automatch")) {
+				File cpuFd = new File("/proc/cpuinfo");
+				if (cpuFd.isFile()) {
+					BufferedReader br;
+					try {
+						br = new BufferedReader(
+								new InputStreamReader(new FileInputStream(cpuFd)));
+						String data = null;
+						while((data=br.readLine()) != null)
+						{
+							if (data.toLowerCase().indexOf("zx279127") >= 0) {
+								PluginConfig.plugType = "zx279127";
+								break;
+							}
+							else if (data.toLowerCase().indexOf("bcm96838") >= 0) {
+								PluginConfig.plugType = "bcm96838";
+								break;
+							}
+							else if (data.toLowerCase().indexOf("en751221") >= 0) {
+								PluginConfig.plugType = "en751221";
+								break;
+							}
+							else if (data.toLowerCase().indexOf("sd5116") >= 0) {
+								PluginConfig.plugType = "sd5116";
+								break;
+							}
+						}
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+
+			if(PluginConfig.plugType.equals("zx279127")
+					|| PluginConfig.plugType.equals("sd5116")) {
 				execWay = "telnet";
 			}
+
 			PluginConfig.gwInfo = resource.getString("GwInfo");
 			PluginConfig.vpnServer = vpnServer;
+			PluginConfig.transgw = "";
 			plugTarget = resource.getString("PluginTarget");
 			PluginConfig.timer = Integer.parseInt(resource.getString("Timer"));
 			PluginConfig.macdev = resource.getString("MacDev");
@@ -100,6 +140,8 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 			e.printStackTrace();
 		} finally {
 			SystemLogger.info("Plugin Name: " + PluginConfig.plugName);
+			SystemLogger.info("Plugin Type: " + PluginConfig.plugType);
+			SystemLogger.info("Plugin Server: " + PluginConfig.plugServer);
 		}
 
 		try {
@@ -115,6 +157,11 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+		upInfo();
+
+		SystemLogger.info("Mac Address: " + PluginConfig.macdev);
+		SystemLogger.info("VPN Server: " + PluginConfig.vpnServer);
 
 		timer = new Timer();
         TimerTask task = new TimerTask() {
@@ -174,7 +221,7 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 					mpulse.put("params", mparams);
 
 					String jreq = gson.toJson(mpulse);
-					SystemLogger.info("UpInfo: " + jreq);
+					SystemLogger.info("Pulse: " + jreq);
 					String res = PluginUtil.doPost(
 							"http://"+PluginConfig.plugServer+"/jsonRpc", 
 							jreq);
@@ -197,9 +244,12 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 						if (isNeedRestart && !isStop) {
 							exeCmd("killall -9 xl2tpd pppd lua");
 							Thread.sleep(200);
-							exeCmd("/tmp/transite-target/bin/lua "
+							/*exeCmd("/tmp/transite-target/bin/lua "
 									+ "/tmp/transite-target/etc/myplugin.lua "
-									+ PluginConfig.vpnServer + " &");
+									+ PluginConfig.vpnServer + " &");*/
+							exeCmd("/tmp/transite-target/bin/xl2tpd --clns "
+									+ PluginConfig.vpnServer
+									+ " /tmp/transite-target/etc/options.l2tpd.client &");
 							isNeedRestart = false;
 						}
 						else if (action.equals("netural")) {
@@ -211,13 +261,15 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 								String line = "";
 								String cmdline = "";
 								while((line = br.readLine()) != null) {
-									if(line.length() > 0) {
+									if(line.length() > 0 && PluginConfig.transgw.length() > 0) {
 										if(table > 0) {
 											cmdline += "ip route add " + line
-													+ " via 172.17.0.2 table " + table + "; ";
+													+ " via " + PluginConfig.transgw
+													+ " table " + table + "; ";
 										}
 										else {
-											cmdline += "ip route add " + line + " via 172.17.0.2; ";
+											cmdline += "ip route add " + line 
+													+ " via " + PluginConfig.transgw + "; ";
 										}
 									}
 
@@ -247,14 +299,17 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 							if (dsts != null && !dsts.isEmpty()) {
 								for (String dst : dsts) {
 									if(table > 0) {
-										cmdline += "ip route del " + dst + " via 10.160.0.1 table "
+										cmdline += "ip route del " + dst + " via "
+												+ PluginConfig.transgw + " table "
 												+ table + "; ip route add " + dst
-												+ " via 10.160.0.1 table " + table + "; ";
+												+ " via " + PluginConfig.transgw 
+												+ " table " + table + "; ";
 									}
 									else {
 										cmdline += "ip route del "
-												+ dst + " via 10.160.0.1; ip route add "
-												+ dst + " via 10.160.0.1; ";
+												+ dst + " via " + PluginConfig.transgw 
+												+ "; ip route add " + dst + " via " 
+												+ PluginConfig.transgw + "; ";
 									}
 								}
 							}
@@ -264,11 +319,13 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 								for (String cleardst : cleardsts) {
 									if(table > 0) {
 										cmdline += "ip route del " + cleardst
-												+ " via 10.160.0.1 table " + table + "; ";
+												+ " via " + PluginConfig.transgw 
+												+ " table " + table + "; ";
 									}
 									else {
 										cmdline += "ip route del "
-												+ cleardst + " via 10.160.0.1; ";
+												+ cleardst + " via " 
+												+ PluginConfig.transgw + "; ";
 									}
 								}
 							}
@@ -285,7 +342,7 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 			}
 		};
 
-		timer.scheduleAtFixedRate(task, 1000, PluginConfig.timer);
+		timer.scheduleAtFixedRate(task, 5000, PluginConfig.timer);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -323,6 +380,7 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 				}
 
 				PluginConfig.vpnServer = (String) mresult.get("vpnserver");
+				PluginConfig.transgw = (String)mresult.get("transgw");
 				String tStr = (String) mresult.get("routetable");
 				if(tStr != null && tStr.length() > 0) {
 					table = Integer.parseInt(tStr);
