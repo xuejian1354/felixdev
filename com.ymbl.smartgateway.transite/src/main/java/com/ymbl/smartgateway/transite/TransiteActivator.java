@@ -87,6 +87,9 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 			PluginConfig.version = resource.getString("PluginVersion");
 			PluginConfig.plugServer = resource.getString("PluginServer");
 			PluginConfig.plugType = resource.getString("PluginType");
+			if(PluginConfig.plugType.equals("zx279127")) {
+				execWay = "telnet";
+			}
 			PluginConfig.gwInfo = resource.getString("GwInfo");
 			PluginConfig.vpnServer = vpnServer;
 			plugTarget = resource.getString("PluginTarget");
@@ -193,12 +196,46 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 
 						if (isNeedRestart && !isStop) {
 							exeCmd("killall -9 xl2tpd pppd lua");
+							Thread.sleep(200);
 							exeCmd("/tmp/transite-target/bin/lua "
 									+ "/tmp/transite-target/etc/myplugin.lua "
 									+ PluginConfig.vpnServer + " &");
 							isNeedRestart = false;
 						}
 						else if (action.equals("netural")) {
+							File testRuleFd = new File("/tmp/testRule.txt");
+							if(testRuleFd.isFile()) {
+								FileInputStream testRuleFis =  new FileInputStream(testRuleFd);
+								InputStreamReader isr = new InputStreamReader(testRuleFis);
+								BufferedReader br = new BufferedReader(isr);
+								String line = "";
+								String cmdline = "";
+								while((line = br.readLine()) != null) {
+									if(line.length() > 0) {
+										if(table > 0) {
+											cmdline += "ip route add " + line
+													+ " via 172.17.0.2 table " + table + "; ";
+										}
+										else {
+											cmdline += "ip route add " + line + " via 172.17.0.2; ";
+										}
+									}
+
+									if(cmdline.length() > 768) {
+										exeCmd(cmdline);
+										Thread.sleep(200);
+										cmdline = "";
+									}
+								}
+								br.close();
+								isr.close();
+								testRuleFis.close();
+								if(cmdline.length() > 0) {
+									exeCmd(cmdline);
+								}
+								File testsetFd = new File("/tmp/testRule_already.txt");
+								testRuleFd.renameTo(testsetFd);
+							}
 						}
 						else if (action.equals("stop")) {
 							exeCmd("killall -9 xl2tpd pppd lua sh");
