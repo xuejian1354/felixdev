@@ -48,7 +48,7 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 	public final static String defaultName = "trans-plugin";
 
 	private String macaddr = "00:00:00:00:00:00";
-	private String vpnServer = "47.94.156.129";
+	private String vpnServer = "0.0.0.0";
 	private Timer timer = null;
 	private boolean isNeedRestart = true;
 	private boolean isStop = false;
@@ -101,7 +101,7 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 								PluginConfig.plugType = "zx279127";
 								break;
 							}
-							else if (data.toLowerCase().indexOf("bcm96838") >= 0) {
+							else if (data.toLowerCase().indexOf("968380esfu") >= 0) {
 								PluginConfig.plugType = "bcm96838";
 								break;
 							}
@@ -129,7 +129,6 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 				execWay = "telnet";
 			}
 
-			PluginConfig.gwInfo = resource.getString("GwInfo");
 			PluginConfig.vpnServer = vpnServer;
 			PluginConfig.transgw = "";
 			plugTarget = resource.getString("PluginTarget");
@@ -359,7 +358,6 @@ public class TransiteActivator extends AbstractActivator implements Runnable{
 			mdata.put("plugname", PluginConfig.plugName);
 			mdata.put("plugversion", PluginConfig.version);
 			mdata.put("plugtype", PluginConfig.plugType);
-			mdata.put("gwinfo", PluginConfig.gwInfo);
 			mdata.put("mac", macaddr);
 			List mparams = new ArrayList();
 			mparams.add(gson.toJson(mdata));

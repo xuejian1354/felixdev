@@ -7,7 +7,6 @@ public class PluginConfig {
 	public static String plugType;
 	public static String vpnServer;
 	public static String transgw;
-	public static String gwInfo;
 	public static String telUser;
 	public static String telPass;
 	public static int telPort;
